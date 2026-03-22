@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Orders</title>
+    <!-- Include Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Include Poppins font for rounder, friendlier look -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #2a2a2a;
+            padding: 20px 40px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+            color: #e0e0e0;
+            text-align: center;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .header img {
+            position: absolute;
+            right: 20px;
+            height: 2em;
+            width: auto;
+            border-radius: 15px;
+        }
+
+        #menu-button {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            position: absolute;
+            left: 20px;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: #333;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+            transition: left 0.3s ease;
+            z-index: 1001;
+            border-radius: 0 15px 15px 0;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .sidebar h3 {
+            margin: 0 0 20px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin: 10px 0;
+        }
+
+        .sidebar a {
+            color: #00b7ff;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+
+        .arrow {
+            font-size: 0.8em;
+        }
+
+        .action-bar {
+            position: sticky;
+            top: 80px;
+            background-color: #1a1a1a;
+            padding: 10px 0;
+            z-index: 999;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        #new-wo-button, #route-wo-button, #submit-wo-button {
+            padding: 8px 12px;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+
+        #new-wo-button:hover, #route-wo-button:hover, #submit-wo-button:hover {
+            background-color: #555;
+        }
+
+        #new-wo-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1002;
+            width: 300px;
+            text-align: center;
+        }
+
+        #new-wo-popup button {
+            display: block;
+            width: 80%;
+            margin: 10px auto;
+            padding: 8px;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        #new-wo-popup button:hover {
+            background-color: #555;
+        }
+
+        /* Styling for Single Work Order Form to match tech.html's Add Tech popup */
+        #single-wo-form, #csv-upload-form, #time-slot-popup, #edit-wo-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1002;
+            width: 400px;
+            height: auto;
+        }
+
+        #time-slot-popup {
+            z-index: 1003; /* Ensure it appears above edit form */
+        }
+
+        #single-wo-form label, #csv-upload-form label, #time-slot-popup label, #edit-wo-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e0e0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #single-wo-form input[type="text"], #single-wo-form select,
+        #csv-upload-form input, #edit-wo-form input[type="text"], #edit-wo-form select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            border-radius: 5px;
+            border: 1px solid #666;
+            background-color: #444;
+            color: #e0e0e0;
+        }
+
+        #single-wo-form textarea, #edit-wo-form textarea {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            border-radius: 5px;
+            border: 1px solid #666;
+            background-color: #444;
+            color: #e0e0e0;
+            height: 100px;
+        }
+
+        #address-input, #edit-address-input {
+            border-radius: 50px; /* Semi-circle ends */
+            padding: 8px 15px;
+        }
+
+        #single-wo-form .calendar-container, #edit-wo-form .calendar-container {
+            margin-bottom: 10px;
+        }
+
+        #single-wo-form .calendar-container input[type="text"], #edit-wo-form .calendar-container input[type="text"] {
+            width: auto;
+            cursor: pointer;
+            background-color: #444;
+            color: #e0e0e0;
+            border: 1px solid #666;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #single-wo-form .selected-dates, #edit-wo-form .selected-dates {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        #single-wo-form .selected-dates .date-entry, #edit-wo-form .selected-dates .date-entry {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #single-wo-form .selected-dates .date-entry .remove-btn, #edit-wo-form .selected-dates .date-entry .remove-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        #single-wo-form .selected-dates .date-entry .remove-btn:hover, #edit-wo-form .selected-dates .date-entry .remove-btn:hover {
+            background-color: #cc0000;
+        }
+
+        #single-wo-form .selected-dates .date-entry .date, #edit-wo-form .selected-dates .date-entry .date {
+            font-weight: 500;
+        }
+
+        #single-wo-form .selected-dates .date-entry .slots, #edit-wo-form .selected-dates .date-entry .slots {
+            font-size: 0.9em;
+            color: #a0a0a0;
+            display: block;
+        }
+
+        #time-slot-popup .bubbly-buttons {
+            margin-bottom: 10px;
+        }
+
+        #time-slot-popup .note {
+            font-size: 0.8em;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+        }
+
+        #single-wo-form button, #csv-upload-form button, #time-slot-popup button, #edit-wo-form button {
+            padding: 8px 12px;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+        }
+
+        #single-wo-form button:hover, #csv-upload-form button:hover, #time-slot-popup button:hover, #edit-wo-form button:hover {
+            background-color: #555;
+        }
+
+        .table-container {
+            position: relative;
+            overflow-x: auto; /* Enable horizontal scrolling */
+            max-height: calc(100vh - 180px); /* Adjust based on action-bar and header height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            margin-top: 120px; /* Push container below header and action bar */
+        }
+
+        table {
+            width: 1600px; /* Fixed width to accommodate all columns */
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #333;
+            table-layout: fixed; /* Ensure consistent column widths */
+        }
+
+        thead {
+            position: sticky;
+            top: 0; /* Stick to the top of the table-container */
+            z-index: 998;
+            background-color: #333;
+        }
+
+        thead tr {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            box-sizing: border-box;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Truncate long text */
+        }
+
+        /* Define column widths to ensure alignment */
+        th:nth-child(1), td:nth-child(1) { /* Select */
+            width: 5%;
+        }
+        th:nth-child(2), td:nth-child(2) { /* Work Order */
+            width: 8%;
+        }
+        th:nth-child(3), td:nth-child(3) { /* Activity Type */
+            width: 8%;
+        }
+        th:nth-child(4), td:nth-child(4) { /* Status */
+            width: 8%;
+        }
+        th:nth-child(5), td:nth-child(5) { /* Availability */
+            width: 12%;
+        }
+        th:nth-child(6), td:nth-child(6) { /* Address */
+            width: 12%;
+        }
+        th:nth-child(7), td:nth-child(7) { /* Site Name */
+            width: 10%;
+        }
+        th:nth-child(8), td:nth-child(8) { /* Notes */
+            width: 15%;
+        }
+        th:nth-child(9), td:nth-child(9) { /* Date Created */
+            width: 10%;
+        }
+        th:nth-child(10), td:nth-child(10) { /* Scheduled Date */
+            width: 8%;
+        }
+        th:nth-child(11), td:nth-child(11) { /* Date Completed */
+            width: 8%;
+        }
+
+        th {
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0.5px;
+            padding: 6px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        th:hover {
+            background-color: #555;
+            transform: scale(1.02);
+        }
+
+        td {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .ticket-number {
+            cursor: pointer;
+            color: #00b7ff;
+        }
+
+        .ticket-number:hover {
+            color: #0095cc;
+        }
+
+        /* Filter Dropdown Styles */
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            border: 1px solid #666;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1003;
+            width: 250px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        .filter-search {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: #444;
+            border: 1px solid #666;
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-size: 0.9em;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .filter-options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .filter-option:hover {
+            background-color: #444;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .filter-option label {
+            color: #e0e0e0;
+            font-size: 0.9em;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .selected-filters {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .filter-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .filter-tag:hover {
+            background-color: #555;
+        }
+
+        /* Flatpickr custom styles */
+        .flatpickr-day.selected {
+            background-color: #4a4a4a !important;
+            border-color: #333 !important;
+            color: #e0e0e0 !important;
+        }
+
+        .flatpickr-day:hover {
+            background-color: #555;
+            border-color: #555;
+        }
+
+        /* Google Places Autocomplete styles */
+        .pac-container {
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #666;
+            z-index: 1003 !important;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .pac-item {
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .pac-item:hover {
+            background-color: #444;
+        }
+
+        .pac-item-query {
+            color: #e0e0e0;
+        }
+
+        /* Style for hidden inputs */
+        #single-address, #edit-address-hidden {
+            display: none;
+        }
+
+        /* Bubbly button styles for activity type and time slots */
+        .bubbly-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .bubbly-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #444;
+            color: #e0e0e0;
+            border: 1px solid #666;
+            border-radius: 20px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .bubbly-button.selected {
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 2px solid #ccc; /* Whiter and thicker border for selected state */
+        }
+
+        .bubbly-button:hover:not(.selected) {
+            background-color: #555;
+            border-color: #777;
+        }
+
+        .note {
+            font-size: 0.8em;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #edit-status:disabled {
+            background-color: #444;
+            color: #a0a0a0;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button id="menu-button">☰</button>
+        <h1>Work Orders</h1>
+        <img src="/static/Admin/img/logo.png" alt="Logo">
+    </div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-content">
+            <div id="dispatch-center-toggle">
+                <h3>Dispatch Center <span class="arrow">▼</span></h3>
+            </div>
+            <ul id="sidebar-menu" style="display: none;">
+                <li><a href="/schedule/" id="schedule-link">Schedule</a></li>
+                <li><a href="/work-orders/" id="work-orders-link">Work Orders</a></li>
+                <li><a href="/technicians/" id="technicians-link">Technicians</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container">
+        <div class="action-bar">
+            <button id="new-wo-button">New Work Order</button>
+            <button id="route-wo-button">Route Work Orders</button>
+            <button id="submit-wo-button">Submit Work Orders</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th data-filter="select"><input type="checkbox" id="select-all"></th>
+                        <th data-filter="ticket_number">Work Order</th>
+                        <th data-filter="activity_type">Activity Type</th>
+                        <th data-filter="status">Status</th>
+                        <th data-filter="availability">Availability</th>
+                        <th data-filter="address">Address</th>
+                        <th data-filter="site_name">Site Name</th>
+                        <th data-filter="notes">Notes</th>
+                        <th data-filter="created_at">Date Created</th>
+                        <th data-filter="scheduled_at">Scheduled Date</th>
+                        <th data-filter="completed_at">Date Completed</th>
+                    </tr>
+                </thead>
+                <tbody id="work-orders-body">
+                    <!-- Work orders will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- New Work Order Popup -->
+    <div id="new-wo-popup">
+        <h3>Create Work Order</h3>
+        <button id="single-wo-btn">One Work Order</button>
+        <button id="csv-wo-btn">Many Work Orders</button>
+        <button id="close-popup">Close</button>
+    </div>
+
+    <!-- Single Work Order Form -->
+    <div id="single-wo-form">
+        <h3>Add One Work Order</h3>
+        <form id="single-wo-form-inner">
+            <label>Activity Type:</label>
+            <div class="bubbly-buttons" id="single-activity-type">
+                <div class="bubbly-button" data-value="PM">PM</div>
+                <div class="bubbly-button" data-value="Service">Service</div>
+                <div class="bubbly-button" data-value="Ice">Ice</div>
+                <div class="bubbly-button" data-value="Installation">Installation</div>
+            </div>
+            <input type="hidden" id="single-activity-type-value" name="activity-type">
+            <label for="single-site-name">Site Name:</label>
+            <input type="text" id="single-site-name" name="site-name" maxlength="50" placeholder="Enter site name">
+            <label for="single-notes">Notes:</label>
+            <textarea id="single-notes" name="notes" maxlength="400" placeholder="Enter notes"></textarea>
+            <label for="address-input">Address:</label>
+            <input type="text" id="address-input" placeholder="Start typing an address..." autocomplete="off">
+            <input type="hidden" id="single-address" name="address">
+            <div id="address-suggestions" style="position: absolute; background: #333; color: #e0e0e0; border: 1px solidNOPASS #666; z-index: 1003; display: none;"></div>
+            <label>Availability:</label>
+            <div class="calendar-container">
+                <input type="text" id="calendar-date" readonly>
+            </div>
+            <div class="selected-dates" id="selected-dates">
+                <!-- Selected dates and time slots will be displayed here -->
+            </div>
+            <button type="submit">Submit</button>
+            <button type="button" id="close-single-form">Close</button>
+        </form>
+    </div>
+
+    <!-- Time Slot Selection Popup -->
+    <div id="time-slot-popup">
+        <h3>Select Time Slots</h3>
+        <p class="note">Click to select multiple time slots.</p>
+        <div class="bubbly-buttons" id="time-slots">
+            <div class="bubbly-button" data-value="8am-10am">8-10</div>
+            <div class="bubbly-button" data-value="10am-12pm">10-12</div>
+            <div class="bubbly-button" data-value="12pm-2pm">12-2</div>
+            <div class="bubbly-button" data-value="2pm-4pm">2-4</div>
+        </div>
+        <input type="hidden" id="time-slots-value" name="time-slots">
+        <button id="time-slot-ok">OK</button>
+        <button id="time-slot-cancel">Cancel</button>
+    </div>
+
+    <!-- CSV Upload Form -->
+    <div id="csv-upload-form">
+        <h3>Upload CSV</h3>
+        <form id="csv-upload-form-inner" enctype="multipart/form-data">
+            <label for="csv-file">Select CSV File:</label>
+            <input type="file" id="csv-file" name="csv-file" accept=".csv">
+            <button type="submit">Upload</button>
+            <button type="button" id="close-csv-form">Close</button>
+        </form>
+    </div>
+
+    <!-- Edit Work Order Form -->
+    <div id="edit-wo-form">
+        <h3>Edit Work Order</h3>
+        <form id="edit-wo-form-inner">
+            <input type="hidden" id="edit-ticket-number" name="ticket-number">
+            <label>Activity Type:</label>
+            <div class="bubbly-buttons" id="edit-activity-type">
+                <div class="bubbly-button" data-value="PM">PM</div>
+                <div class="bubbly-button" data-value="Service">Service</div>
+                <div class="bubbly-button" data-value="Ice">Ice</div>
+                <div class="bubbly-button" data-value="Installation">Installation</div>
+            </div>
+            <input type="hidden" id="edit-activity-type-value" name="activity-type">
+            <label for="edit-status">Status:</label>
+            <select id="edit-status" name="status">
+                <option value="submitted">Submitted</option>
+                <option value="pending">Pending</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="complete">Complete</option>
+            </select>
+            <label for="edit-site-name">Site Name:</label>
+            <input type="text" id="edit-site-name" name="site-name" maxlength="50" placeholder="Enter site name">
+            <label for="edit-notes">Notes:</label>
+            <textarea id="edit-notes" name="notes" maxlength="400" placeholder="Enter notes"></textarea>
+            <label>Availability:</label>
+            <div class="calendar-container">
+                <input type="text" id="edit-calendar-date" readonly>
+            </div>
+            <div class="selected-dates" id="edit-selected-dates">
+                <!-- Selected dates and time slots will be displayed here -->
+            </div>
+            <label for="edit-address-input">Address:</label>
+            <input type="text" id="edit-address-input" placeholder="Start typing an address..." autocomplete="off">
+            <input type="hidden" id="edit-address-hidden" name="address">
+            <div id="edit-address-suggestions" style="position: absolute; background: #333; color: #e0e0e0; border: 1px solid #666; z-index: 1003; display: none;"></div>
+            <button type="submit">Save</button>
+            <button type="button" id="close-edit-form">Close</button>
+        </form>
+    </div>
+
+    <!-- Include Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>console.info('Address autocomplete is disabled in secure demo mode.');</script>
+    <script>
+        // Global variables
+        let flatpickrCreateInstance = null;
+        let flatpickrEditInstance = null;
+        let selectedDateTimes = []; // For creating new work orders
+        let editSelectedDateTimes = []; // For editing work orders
+        let autocompleteService = null;
+        let placesService = null;
+        let allWorkOrders = []; // Store all fetched work orders
+        let filters = {
+            ticket_number: [],
+            activity_type: [],
+            status: [],
+            availability: [],
+            address: [],
+            site_name: [],
+            notes: [],
+            created_at: [],
+            scheduled_at: [],
+            completed_at: []
+        }; // Track selected filters
+
+        // Initialize Flatpickr and address autocomplete after DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const maxDate = new Date(today);
+            maxDate.setFullYear(maxDate.getFullYear() + 1);
+            // Initialize Flatpickr for creating new work orders
+            const calendarElement = document.getElementById('calendar-date');
+            // Handle activity type selection for single work order form (single select)
+            const singleActivityTypeButtons = document.querySelectorAll('#single-activity-type .bubbly-button');
+            const singleActivityTypeValue = document.getElementById('single-activity-type-value');
+            singleActivityTypeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    singleActivityTypeButtons.forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    singleActivityTypeValue.value = button.getAttribute('data-value');
+                });
+            });
+            if (calendarElement) {
+                flatpickrCreateInstance = flatpickr(calendarElement, {
+                    minDate: today,
+                    maxDate: maxDate,
+                    utc: true, // Ensure Flatpickr handles dates in UTC
+                    onChange: (selectedDates, dateStr) => {
+                        if (dateStr) {
+                            timeSlotPopup.style.display = 'block';
+                            timeSlotPopup.dataset.date = dateStr;
+                            timeSlotPopup.dataset.form = 'create';
+                            const existingEntry = selectedDateTimes.find(entry => entry.date === dateStr);
+                            const timeSlotButtons = document.querySelectorAll('#time-slots .bubbly-button');
+                            // Clear all selections first
+                            timeSlotButtons.forEach(button => {
+                                button.classList.remove('selected');
+                            });
+                            // Only apply 'selected' class if there are existing slots for this date
+                            if (existingEntry) {
+                                timeSlotButtons.forEach(button => {
+                                    if (existingEntry.slots.includes(button.getAttribute('data-value'))) {
+                                        button.classList.add('selected');
+                                    }
+                                });
+                                document.getElementById('time-slots-value').value = existingEntry.slots.join(', ');
+                            } else {
+                                // No existing entry, so no slots should be selected
+                                document.getElementById('time-slots-value').value = '';
+                            }
+                        }
+                    },
+                    onReady: (selectedDates, dateStr, instance) => {
+                        updateCreateCalendar();
+                    }
+                });
+            } else {
+                console.error('Create calendar element not found');
+            }
+
+            // Initialize Flatpickr for editing work orders
+            const editCalendarElement = document.getElementById('edit-calendar-date');
+            if (editCalendarElement) {
+                flatpickrEditInstance = flatpickr(editCalendarElement, {
+                    minDate: today,
+                    maxDate: maxDate,
+                    utc: true, // Ensure Flatpickr handles dates in UTC
+                    onChange: (selectedDates, dateStr) => {
+                        if (dateStr) {
+                            timeSlotPopup.style.display = 'block';
+                            timeSlotPopup.dataset.date = dateStr;
+                            timeSlotPopup.dataset.form = 'edit';
+                            const existingEntry = editSelectedDateTimes.find(entry => entry.date === dateStr);
+                            const timeSlotButtons = document.querySelectorAll('#time-slots .bubbly-button');
+                            // Clear all selections first
+                            timeSlotButtons.forEach(button => {
+                                button.classList.remove('selected');
+                            });
+                            // Only apply 'selected' class if there are existing slots for this date
+                            if (existingEntry) {
+                                timeSlotButtons.forEach(button => {
+                                    if (existingEntry.slots.includes(button.getAttribute('data-value'))) {
+                                        button.classList.add('selected');
+                                    }
+                                });
+                                document.getElementById('time-slots-value').value = existingEntry.slots.join(', ');
+                            } else {
+                                // No existing entry, so no slots should be selected
+                                document.getElementById('time-slots-value').value = '';
+                            }
+                        }
+                    },
+                    onReady: (selectedDates, dateStr, instance) => {
+                        updateEditCalendar();
+                    }
+                });
+            } else {
+                console.error('Edit calendar element not found');
+            }
+
+            // Initialize address autocomplete for create form
+            const addressInput = document.getElementById('address-input');
+            const singleAddressInput = document.getElementById('single-address');
+            const suggestionsContainer = document.getElementById('address-suggestions');
+            if (!addressInput || !singleAddressInput || !suggestionsContainer) {
+                console.error('Create address input, single-address input, or suggestions container not found');
+                return;
+            }
+
+            addressInput.addEventListener('input', async (event) => {
+                const query = event.target.value;
+                if (!query || query.length < 3) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                if (!autocompleteService) {
+                    console.error('AutocompleteService not initialized');
+                    return;
+                }
+
+                try {
+                    const request = {
+                        input: query,
+                        types: ['address'],
+                        componentRestrictions: { country: 'us' }
+                    };
+                    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+                        if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                            console.error('Error fetching place predictions:', status);
+                            suggestionsContainer.style.display = 'none';
+                            return;
+                        }
+
+                        suggestionsContainer.innerHTML = '';
+                        predictions.forEach(prediction => {
+                            const suggestionItem = document.createElement('div');
+                            suggestionItem.className = 'pac-item';
+                            suggestionItem.textContent = prediction.description;
+                            suggestionItem.style.padding = '5px';
+                            suggestionItem.style.cursor = 'pointer';
+                            suggestionItem.addEventListener('click', () => {
+                                addressInput.value = prediction.description;
+                                singleAddressInput.value = prediction.description;
+                                console.log('Selected create address:', prediction.description);
+                                console.log('Updated single-address value:', singleAddressInput.value);
+                                suggestionsContainer.style.display = 'none';
+                            });
+                            suggestionsContainer.appendChild(suggestionItem);
+                        });
+                        suggestionsContainer.style.display = 'block';
+                    });
+                } catch (error) {
+                    console.error('Error during create address autocomplete:', error);
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Initialize address autocomplete for edit form
+            const editAddressInput = document.getElementById('edit-address-input');
+            const editAddressHidden = document.getElementById('edit-address-hidden');
+            const editSuggestionsContainer = document.getElementById('edit-address-suggestions');
+            if (!editAddressInput || !editAddressHidden || !editSuggestionsContainer) {
+                console.error('Edit address input, hidden address input, or suggestions container not found');
+                return;
+            }
+
+            editAddressInput.addEventListener('input', async (event) => {
+                const query = event.target.value;
+                if (!query || query.length < 3) {
+                    editSuggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                if (!autocompleteService) {
+                    console.error('AutocompleteService not initialized');
+                    return;
+                }
+
+                try {
+                    const request = {
+                        input: query,
+                        types: ['address'],
+                        componentRestrictions: { country: 'us' }
+                    };
+                    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+                        if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                            console.error('Error fetching place predictions:', status);
+                            editSuggestionsContainer.style.display = 'none';
+                            return;
+                        }
+
+                        editSuggestionsContainer.innerHTML = '';
+                        predictions.forEach(prediction => {
+                            const suggestionItem = document.createElement('div');
+                            suggestionItem.className = 'pac-item';
+                            suggestionItem.textContent = prediction.description;
+                            suggestionItem.style.padding = '5px';
+                            suggestionItem.style.cursor = 'pointer';
+                            suggestionItem.addEventListener('click', () => {
+                                editAddressInput.value = prediction.description;
+                                editAddressHidden.value = prediction.description;
+                                console.log('Selected edit address:', prediction.description);
+                                console.log('Updated edit-address-hidden value:', editAddressHidden.value);
+                                editSuggestionsContainer.style.display = 'none';
+                            });
+                            editSuggestionsContainer.appendChild(suggestionItem);
+                        });
+                        editSuggestionsContainer.style.display = 'block';
+                    });
+                } catch (error) {
+                    console.error('Error during edit address autocomplete:', error);
+                    editSuggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!addressInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                    suggestionsContainer.style.display = 'none';
+                }
+                if (!editAddressInput.contains(event.target) && !editSuggestionsContainer.contains(event.target)) {
+                    editSuggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Update address inputs on blur as a fallback
+            addressInput.addEventListener('blur', () => {
+                singleAddressInput.value = addressInput.value;
+                console.log('Updated single-address value (via blur):', singleAddressInput.value);
+            });
+            editAddressInput.addEventListener('blur', () => {
+                editAddressHidden.value = editAddressInput.value;
+                console.log('Updated edit-address-hidden value (via blur):', editAddressHidden.value);
+            });
+
+            // Character limit validation for Site Name and Notes
+            const singleSiteName = document.getElementById('single-site-name');
+            const singleNotes = document.getElementById('single-notes');
+            const editSiteName = document.getElementById('edit-site-name');
+            const editNotes = document.getElementById('edit-notes');
+
+            singleSiteName.addEventListener('input', () => {
+                if (singleSiteName.value.length >= 50) {
+                    alert('Site Name cannot exceed 50 characters.');
+                    singleSiteName.value = singleSiteName.value.substring(0, 50);
+                }
+            });
+
+            singleNotes.addEventListener('input', () => {
+                if (singleNotes.value.length >= 400) {
+                    alert('Notes cannot exceed 400 characters.');
+                    singleNotes.value = singleNotes.value.substring(0, 400);
+                }
+            });
+
+            editSiteName.addEventListener('input', () => {
+                if (editSiteName.value.length >= 50) {
+                    alert('Site Name cannot exceed 50 characters.');
+                    editSiteName.value = editSiteName.value.substring(0, 50);
+                }
+            });
+
+            editNotes.addEventListener('input', () => {
+                if (editNotes.value.length >= 400) {
+                    alert('Notes cannot exceed 400 characters.');
+                    editNotes.value = editNotes.value.substring(0, 400);
+                }
+            });
+        });
+
+        // Callback function to initialize Google Maps API services
+        function initMap() {
+            console.log('Google Maps API loaded');
+            try {
+                autocompleteService = new google.maps.places.AutocompleteService();
+                placesService = new google.maps.places.PlacesService(document.createElement('div'));
+            } catch (error) {
+                console.error('Error initializing Google Maps services:', error);
+            }
+            fetchWorkOrders(); // Load work orders after initialization
+        }
+
+        async function fetchWorkOrders() {
+            try {
+                const response = await fetch('/api/work-orders/', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    mode: 'same-origin',
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                allWorkOrders = await response.json();
+                console.log('Fetched work orders:', allWorkOrders);
+                renderWorkOrders(allWorkOrders);
+            } catch (error) {
+                console.error('Error fetching work orders:', error);
+                document.getElementById('work-orders-body').innerHTML = `<tr><td colspan="11" class="error">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderWorkOrders(workOrders) {
+            const tbody = document.getElementById('work-orders-body');
+            tbody.innerHTML = '';
+            const selectAllCheckbox = document.getElementById('select-all');
+            selectAllCheckbox.checked = false; // Reset select-all checkbox
+            workOrders.forEach(wo => {
+                if (!matchesFilters(wo)) return;
+                const row = document.createElement('tr');
+                const checkboxCell = document.createElement('td');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = wo.ticket_number;
+                checkbox.className = 'wo-checkbox';
+                checkboxCell.appendChild(checkbox);
+                row.appendChild(checkboxCell);
+                const ticketCell = document.createElement('td');
+                ticketCell.innerHTML = `<span class="ticket-number">${wo.ticket_number}</span>`;
+                ticketCell.querySelector('.ticket-number').addEventListener('click', () => showEditForm(wo));
+                row.appendChild(ticketCell);
+                const activityCell = document.createElement('td');
+                activityCell.textContent = wo.activity_type;
+                row.appendChild(activityCell);
+                const statusCell = document.createElement('td');
+                statusCell.textContent = wo.status;
+                row.appendChild(statusCell);
+                const availabilityCell = document.createElement('td');
+                availabilityCell.textContent = wo.customer_availability;
+                row.appendChild(availabilityCell);
+                const addressCell = document.createElement('td');
+                addressCell.textContent = wo.address;
+                row.appendChild(addressCell);
+                const siteNameCell = document.createElement('td');
+                siteNameCell.textContent = wo.site_name !== null && wo.site_name !== undefined && wo.site_name.trim() !== '' ? wo.site_name : '';
+                row.appendChild(siteNameCell);
+                const notesCell = document.createElement('td');
+                notesCell.textContent = wo.notes !== null && wo.notes !== undefined && wo.notes.trim() !== '' ? wo.notes : '';
+                row.appendChild(notesCell);
+                const createdCell = document.createElement('td');
+                createdCell.textContent = wo.created_at ? new Date(wo.created_at).toLocaleString() : 'N/A';
+                row.appendChild(createdCell);
+                const scheduledCell = document.createElement('td');
+                scheduledCell.textContent = wo.scheduled_at ? new Date(wo.scheduled_at).toLocaleString() : 'N/A';
+                row.appendChild(scheduledCell);
+                const completedCell = document.createElement('td');
+                completedCell.textContent = wo.completed_at ? new Date(wo.completed_at).toLocaleString() : 'N/A';
+                row.appendChild(completedCell);
+                tbody.appendChild(row);
+            });
+        }
+
+        function matchesFilters(wo) {
+            // Work Order filter
+            if (filters.ticket_number.length > 0 && !filters.ticket_number.includes(wo.ticket_number)) {
+                return false;
+            }
+
+            // Activity Type filter
+            if (filters.activity_type.length > 0 && !filters.activity_type.includes(wo.activity_type)) {
+                return false;
+            }
+
+            // Status filter
+            if (filters.status.length > 0 && !filters.status.includes(wo.status)) {
+                return false;
+            }
+
+            // Availability filter (days of the week)
+            if (filters.availability.length > 0) {
+                const woDays = extractAvailabilityDays(wo.customer_availability);
+                if (!filters.availability.some(day => woDays.includes(day))) {
+                    return false;
+                }
+            }
+
+            // Address filter
+            if (filters.address.length > 0 && !filters.address.includes(wo.address)) {
+                return false;
+            }
+
+            // Site Name filter
+            if (filters.site_name.length > 0) {
+                const siteName = wo.site_name !== null && wo.site_name !== undefined && wo.site_name.trim() !== '' ? wo.site_name : '';
+                if (!filters.site_name.includes(siteName)) {
+                    return false;
+                }
+            }
+
+            // Notes filter
+            if (filters.notes.length > 0) {
+                const notes = wo.notes !== null && wo.notes !== undefined && wo.notes.trim() !== '' ? wo.notes : '';
+                if (!filters.notes.includes(notes)) {
+                    return false;
+                }
+            }
+
+            // Date Created filter
+            if (filters.created_at.length > 0) {
+                const createdDate = wo.created_at ? new Date(wo.created_at).toLocaleDateString() : 'N/A';
+                if (!filters.created_at.includes(createdDate)) {
+                    return false;
+                }
+            }
+
+            // Scheduled Date filter
+            if (filters.scheduled_at.length > 0) {
+                const scheduledDate = wo.scheduled_at ? new Date(wo.scheduled_at).toLocaleDateString() : 'N/A';
+                if (!filters.scheduled_at.includes(scheduledDate)) {
+                    return false;
+                }
+            }
+
+            // Date Completed filter
+            if (filters.completed_at.length > 0) {
+                const completedDate = wo.completed_at ? new Date(wo.completed_at).toLocaleDateString() : 'N/A';
+                if (!filters.completed_at.includes(completedDate)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function extractAvailabilityDays(availabilityStr) {
+            if (!availabilityStr) return [];
+            const days = [];
+            const dateSlots = availabilityStr.split('; ').filter(slot => slot.trim());
+            dateSlots.forEach(dateSlot => {
+                const [datePart] = dateSlot.split(': ');
+                if (datePart) {
+                    try {
+                        const dateObj = new Date(datePart);
+                        const dayName = dateObj.toLocaleString('en-US', { weekday: 'long' });
+                        if (!days.includes(dayName)) {
+                            days.push(dayName);
+                        }
+                    } catch (e) {
+                        console.warn(`Invalid date format in availability: ${datePart}`);
+                    }
+                }
+            });
+            return days;
+        }
+
+        // Initialize filter dropdowns
+        function initializeFilters() {
+            const headers = document.querySelectorAll('th[data-filter]');
+            headers.forEach(header => {
+                const newHeader = header.cloneNode(true);
+                header.parentNode.replaceChild(newHeader, header);
+            });
+
+            const newHeaders = document.querySelectorAll('th[data-filter]');
+            newHeaders.forEach(header => {
+                const filterType = header.getAttribute('data-filter');
+                if (filterType === 'select') return;
+
+                header.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const existingDropdown = document.querySelector(`.filter-dropdown[data-filter="${filterType}"]`);
+                    if (existingDropdown) {
+                        existingDropdown.remove();
+                        return;
+                    }
+
+                    document.querySelectorAll('.filter-dropdown').forEach(d => d.remove());
+
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'filter-dropdown';
+                    dropdown.setAttribute('data-filter', filterType);
+
+                    const headerRect = header.getBoundingClientRect();
+                    if (filterType === 'completed_at') {
+                        dropdown.style.right = `${window.innerWidth - headerRect.right}px`;
+                        dropdown.style.left = 'auto';
+                    } else {
+                        dropdown.style.left = `${headerRect.left}px`;
+                        dropdown.style.right = 'auto';
+                    }
+                    dropdown.style.top = `${headerRect.bottom + window.scrollY}px`;
+
+                    if (filterType === 'activity_type') {
+                        dropdown.innerHTML = `
+                            <div class="filter-options">
+                                ${['PM', 'Service', 'Ice', 'Installation'].map(type => `
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="${filterType}_${type}" value="${type}" ${filters[filterType].includes(type) ? 'checked' : ''}>
+                                        <label for="${filterType}_${type}">${type}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else if (filterType === 'availability') {
+                        dropdown.innerHTML = `
+                            <div class="filter-options">
+                                ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => `
+                                    <div class="filter-option">
+                                        <input type="checkbox" id="${filterType}_${day}" value="${day}" ${filters[filterType].includes(day) ? 'checked' : ''}>
+                                        <label for="${filterType}_${day}">${day}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="selected-filters" data-filter="${filterType}"></div>
+                        `;
+                    } else {
+                        let options;
+                        if (['created_at', 'scheduled_at', 'completed_at'].includes(filterType)) {
+                            options = [...new Set(allWorkOrders
+                                .map(wo => wo[filterType] ? new Date(wo[filterType]).toLocaleDateString() : 'N/A')
+                                .filter(val => val !== 'N/A'))].sort((a, b) => new Date(a) - new Date(b));
+                            options.push('N/A');
+                        } else if (filterType === 'site_name') {
+                            options = [...new Set(allWorkOrders.map(wo => wo.site_name !== null && wo.site_name !== undefined && wo.site_name.trim() !== '' ? wo.site_name : ''))].sort();
+                        } else if (filterType === 'notes') {
+                            options = [...new Set(allWorkOrders.map(wo => wo.notes !== null && wo.notes !== undefined && wo.notes.trim() !== '' ? wo.notes : ''))].sort();
+                        } else {
+                            options = [...new Set(allWorkOrders.map(wo => wo[filterType] || 'N/A'))].sort();
+                        }
+                        dropdown.innerHTML = `
+                            <input type="text" class="filter-search" placeholder="Search...">
+                            <div class="filter-options">
+                                ${options.map(option => `
+                                    <div class="filter-option" data-value="${option}">
+                                        <input type="checkbox" id="${filterType}_${option}" value="${option}" ${filters[filterType].includes(option) ? 'checked' : ''}>
+                                        <label for="${filterType}_${option}">${option || ''}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="selected-filters" data-filter="${filterType}"></div>
+                        `;
+                    }
+
+                    document.body.appendChild(dropdown);
+                    dropdown.classList.add('show');
+
+                    if (filterType !== 'activity_type') {
+                        const selectedFiltersDiv = dropdown.querySelector('.selected-filters');
+                        filters[filterType].forEach(value => {
+                            const tag = document.createElement('span');
+                            tag.className = 'filter-tag';
+                            tag.textContent = value || '';
+                            tag.setAttribute('data-value', value);
+                            tag.addEventListener('click', () => {
+                                filters[filterType] = filters[filterType].filter(v => v !== value);
+                                renderWorkOrders(allWorkOrders);
+                                initializeFilters();
+                            });
+                            selectedFiltersDiv.appendChild(tag);
+                        });
+                    }
+
+                    const searchInput = dropdown.querySelector('.filter-search');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', () => {
+                            const query = searchInput.value.toLowerCase();
+                            const options = dropdown.querySelectorAll('.filter-option');
+                            options.forEach(option => {
+                                const text = option.getAttribute('data-value').toLowerCase();
+                                option.style.display = text.includes(query) ? 'flex' : 'none';
+                            });
+                        });
+                        searchInput.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const query = searchInput.value.toLowerCase();
+                                const firstMatch = Array.from(dropdown.querySelectorAll('.filter-option'))
+                                    .find(option => option.style.display !== 'none');
+                                if (firstMatch) {
+                                    const checkbox = firstMatch.querySelector('input[type="checkbox"]');
+                                    if (!checkbox.checked) {
+                                        checkbox.checked = true;
+                                        if (!filters[filterType].includes(checkbox.value)) {
+                                            filters[filterType].push(checkbox.value);
+                                        }
+                                        renderWorkOrders(allWorkOrders);
+                                        initializeFilters();
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.addEventListener('change', () => {
+                            if (checkbox.checked) {
+                                if (!filters[filterType].includes(checkbox.value)) {
+                                    filters[filterType].push(checkbox.value);
+                                }
+                            } else {
+                                filters[filterType] = filters[filterType].filter(v => v !== checkbox.value);
+                            }
+                            renderWorkOrders(allWorkOrders);
+                            initializeFilters();
+                        });
+                    });
+                });
+            });
+
+            const selectAllCheckbox = document.getElementById('select-all');
+            selectAllCheckbox.addEventListener('change', () => {
+                const checkboxes = document.querySelectorAll('#work-orders-body .wo-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        function handleOutsideClick(e) {
+            if (!e.target.closest('th') && !e.target.closest('.filter-dropdown')) {
+                document.querySelectorAll('.filter-dropdown').forEach(d => d.remove());
+            }
+        }
+
+        document.removeEventListener('click', handleOutsideClick);
+        document.addEventListener('click', handleOutsideClick);
+
+        const menuButton = document.getElementById('menu-button');
+        const sidebar = document.getElementById('sidebar');
+        const dispatchToggle = document.getElementById('dispatch-center-toggle');
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const newWoButton = document.getElementById('new-wo-button');
+        const routeWoButton = document.getElementById('route-wo-button');
+        const newWoPopup = document.getElementById('new-wo-popup');
+        const singleWoBtn = document.getElementById('single-wo-btn');
+        const csvWoBtn = document.getElementById('csv-wo-btn');
+        const closePopup = document.getElementById('close-popup');
+        const singleWoForm = document.getElementById('single-wo-form');
+        const csvUploadForm = document.getElementById('csv-upload-form');
+        const closeSingleForm = document.getElementById('close-single-form');
+        const closeCsvForm = document.getElementById('close-csv-form');
+        const calendarDate = document.getElementById('calendar-date');
+        const timeSlotPopup = document.getElementById('time-slot-popup');
+        const timeSlotOk = document.getElementById('time-slot-ok');
+        const timeSlotCancel = document.getElementById('time-slot-cancel');
+        const selectedDatesContainer = document.getElementById('selected-dates');
+        const editWoForm = document.getElementById('edit-wo-form');
+        const editWoFormInner = document.getElementById('edit-wo-form-inner');
+        const closeEditForm = document.getElementById('close-edit-form');
+        const activityTypeButtons = document.querySelectorAll('#edit-activity-type .bubbly-button');
+        const activityTypeValue = document.getElementById('edit-activity-type-value');
+        const timeSlotButtons = document.querySelectorAll('#time-slots .bubbly-button');
+        const timeSlotsValue = document.getElementById('time-slots-value');
+        const editSelectedDatesContainer = document.getElementById('edit-selected-dates');
+
+        menuButton.addEventListener('click', () => {
+            sidebar.style.left = sidebar.style.left === '0px' ? '-250px' : '0px';
+        });
+
+        dispatchToggle.addEventListener('click', () => {
+            sidebarMenu.style.display = sidebarMenu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target) && event.target !== menuButton) {
+                sidebar.style.left = '-250px';
+            }
+        });
+
+        newWoButton.addEventListener('click', () => {
+            newWoPopup.style.display = 'block';
+        });
+
+        singleWoBtn.addEventListener('click', () => {
+            newWoPopup.style.display = 'none';
+            singleWoForm.style.display = 'block';
+            resetSingleWoForm();
+        });
+
+        csvWoBtn.addEventListener('click', () => {
+            newWoPopup.style.display = 'none';
+            csvUploadForm.style.display = 'block';
+        });
+
+        closePopup.addEventListener('click', () => {
+            newWoPopup.style.display = 'none';
+        });
+
+        closeSingleForm.addEventListener('click', () => {
+            singleWoForm.style.display = 'none';
+        });
+
+        closeCsvForm.addEventListener('click', () => {
+            csvUploadForm.style.display = 'none';
+        });
+
+        closeEditForm.addEventListener('click', () => {
+            editWoForm.style.display = 'none';
+        });
+
+        function resetSingleWoForm() {
+            const singleActivityTypeButtons = document.querySelectorAll('#single-activity-type .bubbly-button');
+            singleActivityTypeButtons.forEach(button => button.classList.remove('selected'));
+            document.getElementById('single-activity-type-value').value = '';
+            document.getElementById('single-site-name').value = '';
+            document.getElementById('single-notes').value = '';
+            const addressInput = document.getElementById('address-input');
+            const singleAddressInput = document.getElementById('single-address');
+            const suggestionsContainer = document.getElementById('address-suggestions');
+            if (addressInput) {
+                addressInput.value = '';
+                console.log('Reset address-input value:', addressInput.value);
+            }
+            if (singleAddressInput) {
+                singleAddressInput.value = '';
+                console.log('Reset single-address value:', singleAddressInput.value);
+            }
+            if (suggestionsContainer) {
+                suggestionsContainer.style.display = 'none';
+            }
+            selectedDateTimes = [];
+            selectedDatesContainer.innerHTML = '';
+            if (flatpickrCreateInstance) {
+                flatpickrCreateInstance.clear();
+            }
+            updateCreateCalendar();
+        }
+
+        function updateCreateCalendar() {
+            if (!flatpickrCreateInstance) return;
+            const selectedDates = selectedDateTimes.map(entry => entry.date);
+            flatpickrCreateInstance.setDate(selectedDates, false);
+        }
+
+        function updateEditCalendar() {
+            if (!flatpickrEditInstance) return;
+            const selectedDates = editSelectedDateTimes.map(entry => entry.date);
+            flatpickrEditInstance.setDate(selectedDates, false);
+        }
+
+        // Handle time slot selection (multi-select without Ctrl/Cmd)
+        timeSlotButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                button.classList.toggle('selected');
+                const selectedSlots = Array.from(timeSlotButtons)
+                    .filter(btnEarth => btn.classList.contains('selected'))
+                    .map(btn => btn.getAttribute('data-value'));
+                timeSlotsValue.value = selectedSlots.join(', ');
+            });
+        });
+
+        timeSlotOk.addEventListener('click', () => {
+            const selectedDate = timeSlotPopup.dataset.date;
+            const formType = timeSlotPopup.dataset.form;
+            const selectedSlots = Array.from(timeSlotButtons)
+                .filter(btn => btn.classList.contains('selected'))
+                .map(btn => btn.getAttribute('data-value'));
+            if (selectedSlots.length === 0) {
+                alert('Please select at least one time slot.');
+                return;
+            }
+            if (formType === 'create') {
+                const existingEntryIndex = selectedDateTimes.findIndex(entry => entry.date === selectedDate);
+                if (existingEntryIndex !== -1) {
+                    selectedDateTimes[existingEntryIndex].slots = selectedSlots;
+                } else {
+                    selectedDateTimes.push({ date: selectedDate, slots: selectedSlots });
+                }
+                selectedDateTimes.sort((a, b) => new Date(a.date) - new Date(b.date));
+                renderCreateSelectedDates();
+                updateCreateCalendar();
+            } else {
+                const existingEntryIndex = editSelectedDateTimes.findIndex(entry => entry.date === selectedDate);
+                if (existingEntryIndex !== -1) {
+                    editSelectedDateTimes[existingEntryIndex].slots = selectedSlots;
+                } else {
+                    editSelectedDateTimes.push({ date: selectedDate, slots: selectedSlots });
+                }
+                editSelectedDateTimes.sort((a, b) => new Date(a.date) - new Date(b.date));
+                renderEditSelectedDates();
+                updateEditCalendar();
+            }
+            timeSlotPopup.style.display = 'none';
+        });
+
+        timeSlotCancel.addEventListener('click', () => {
+            timeSlotPopup.style.display = 'none';
+        });
+
+        function renderCreateSelectedDates() {
+            selectedDatesContainer.innerHTML = '';
+            selectedDateTimes.forEach((entry, index) => {
+                const dateEntry = document.createElement('div');
+                dateEntry.className = 'date-entry';
+                dateEntry.innerHTML = `
+                    <button class="remove-btn" data-index="${index}">-</button>
+                    <div>
+                        <div class="date">${formatDate(entry.date)}</div>
+                        <div class="slots">${entry.slots.join(', ')}</div>
+                    </div>
+                `;
+                selectedDatesContainer.appendChild(dateEntry);
+            });
+
+            document.querySelectorAll('#selected-dates .remove-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    selectedDateTimes.splice(index, 1);
+                    renderCreateSelectedDates();
+                    updateCreateCalendar();
+                });
+            });
+        }
+
+        function renderEditSelectedDates() {
+            editSelectedDatesContainer.innerHTML = '';
+            editSelectedDateTimes.forEach((entry, index) => {
+                const dateEntry = document.createElement('div');
+                dateEntry.className = 'date-entry';
+                dateEntry.innerHTML = `
+                    <button class="remove-btn" data-index="${index}">-</button>
+                    <div>
+                        <div class="date">${formatDate(entry.date)}</div>
+                        <div class="slots">${entry.slots.join(', ')}</div>
+                    </div>
+                `;
+                editSelectedDatesContainer.appendChild(dateEntry);
+            });
+
+            document.querySelectorAll('#edit-selected-dates .remove-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    editSelectedDateTimes.splice(index, 1);
+                    renderEditSelectedDates();
+                    updateEditCalendar();
+                });
+            });
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            // Ensure the date is interpreted as UTC and displayed as such
+            return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
+        }
+
+        function parseAvailability(availabilityStr) {
+            if (!availabilityStr) return [];
+            const dateSlots = availabilityStr.split('; ').filter(slot => slot.trim());
+            const result = [];
+            dateSlots.forEach(dateSlot => {
+                const [datePart, slotsPart] = dateSlot.split(': ');
+                if (datePart && slotsPart) {
+                    const slots = slotsPart.split(', ').filter(slot => slot.trim());
+                    result.push({ date: datePart, slots });
+                }
+            });
+            return result;
+        }
+
+        function showEditForm(wo) {
+            document.getElementById('edit-ticket-number').value = wo.ticket_number;
+
+            // Set activity type
+            activityTypeButtons.forEach(button => {
+                button.classList.toggle('selected', button.getAttribute('data-value') === wo.activity_type);
+            });
+            activityTypeValue.value = wo.activity_type;
+
+            // Set status
+            const statusSelect = document.getElementById('edit-status');
+            statusSelect.value = wo.status;
+            statusSelect.disabled = wo.status === 'submitted';
+
+            // Set site name and notes
+            document.getElementById('edit-site-name').value = wo.site_name !== null && wo.site_name !== undefined ? wo.site_name : '';
+            document.getElementById('edit-notes').value = wo.notes !== null && wo.notes !== undefined ? wo.notes : '';
+
+            // Set availability
+            editSelectedDateTimes = parseAvailability(wo.customer_availability);
+            renderEditSelectedDates();
+            updateEditCalendar();
+
+            // Set address
+            document.getElementById('edit-address-input').value = wo.address;
+            document.getElementById('edit-address-hidden').value = wo.address;
+
+            editWoForm.style.display = 'block';
+        }
+
+        // Handle activity type selection (single select)
+        activityTypeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                activityTypeButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                activityTypeValue.value = button.getAttribute('data-value');
+            });
+        });
+
+        editWoFormInner.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const ticketNumber = document.getElementById('edit-ticket-number').value;
+            const activityType = document.getElementById('edit-activity-type-value').value;
+            const status = document.getElementById('edit-status').value;
+            const siteName = document.getElementById('edit-site-name').value.trim();
+            const notes = document.getElementById('edit-notes').value.trim();
+            const address = document.getElementById('edit-address-hidden').value;
+
+            console.log('Submitting edit form:', { ticketNumber, activityType, status, siteName, notes, address });
+
+            // Format availability
+            const availability = editSelectedDateTimes.length > 0
+                ? editSelectedDateTimes.map(entry => {
+                      const formattedDate = formatDate(entry.date);
+                      return `${formattedDate}: ${entry.slots.join(', ')}`;
+                  }).join('; ')
+                : '';
+
+            // Fetch the current work order to compare fields
+            const currentWoResponse = await fetch('/api/work-orders/', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                mode: 'same-origin',
+                credentials: 'same-origin'
+            });
+            const workOrders = await currentWoResponse.json();
+            const currentWo = workOrders.find(wo => wo.ticket_number === ticketNumber);
+
+            // Determine if activity_type, customer_availability, address, site_name, or notes changed
+            const isNonStatusChanged =
+                activityType !== currentWo.activity_type ||
+                availability !== currentWo.customer_availability ||
+                address !== currentWo.address ||
+                siteName !== (currentWo.site_name || '') ||
+                notes !== (currentWo.notes || '');
+
+            // Set status to "submitted" if any non-status field changed
+            const finalStatus = isNonStatusChanged ? 'submitted' : status;
+
+            const updatedWo = {
+                ticket_number: ticketNumber,
+                activity_type: activityType,
+                status: finalStatus,
+                customer_availability: availability,
+                address: address,
+                site_name: siteName,
+                notes: notes
+            };
+
+            try {
+                const response = await fetch('/api/update-work-order-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify(updatedWo),
+                    credentials: 'same-origin'
+                });
+                const result = await response.json();
+                console.log('Response from /api/update-work-order-status/:', result);
+                if (result.status === 'success') {
+                    alert('Work order updated successfully!');
+                    editWoForm.style.display = 'none';
+                    fetchWorkOrders();
+                } else {
+                    alert(`Failed to update work order: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error updating work order:', error);
+                alert(`An error occurred while updating the work order: ${error.message}`);
+            }
+        });
+
+        document.getElementById('single-wo-form-inner').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const activityType = document.getElementById('single-activity-type-value').value;
+            const siteName = document.getElementById('single-site-name').value.trim();
+            const notes = document.getElementById('single-notes').value.trim();
+            const addressInput = document.getElementById('address-input');
+            const singleAddressInput = document.getElementById('single-address');
+            let address = '';
+
+            if (singleAddressInput) {
+                address = singleAddressInput.value;
+                console.log('Address value before validation (from single-address):', address);
+            } else {
+                console.error('Single-address input not found during form submission');
+                alert('An error occurred: Address input not found. Please try again.');
+                return;
+            }
+
+            // Fallback: Use the visible address input if single-address is empty
+            if (!address && addressInput) {
+                address = addressInput.value;
+                console.log('Address value before validation (from address-input):', address);
+            }
+
+            if (!activityType) {
+                alert('Please select an Activity Type.');
+                return;
+            }
+
+            if (selectedDateTimes.length === 0) {
+                alert('Please select at least one date and time slot for availability.');
+                return;
+            }
+
+            if (!address) {
+                alert('Please select a valid address.');
+                return;
+            }
+
+            // Format availability as "MM/DD/YYYY: 8am-10am, 2pm-4pm; MM/DD/YYYY: 12pm-2pm"
+            const availability = selectedDateTimes.map(entry => {
+                const formattedDate = formatDate(entry.date);
+                return `${formattedDate}: ${entry.slots.join(', ')}`;
+            }).join('; ');
+
+            const newWo = {
+                activity_type: activityType,
+                address: address,
+                site_name: siteName,
+                notes: notes,
+                customer_availability: availability,
+                status: 'submitted'
+            };
+
+            console.log('Creating new work order:', newWo);
+
+            try {
+                const response = await fetch('/api/create-work-order/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify(newWo),
+                    credentials: 'same-origin'
+                });
+                const result = await response.json();
+                console.log('Response from /api/create-work-order/:', result);
+                if (result.status === 'success') {
+                    alert('Work order created successfully!');
+                    singleWoForm.style.display = 'none';
+                    fetchWorkOrders();
+                } else {
+                    alert(`Failed to create work order: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error creating work order:', error);
+                alert(`An error occurred while creating the work order: ${error.message}`);
+            }
+        });
+
+        // Function to get CSRF token from cookies
+        function getCsrfToken() {
+            const name = 'csrftoken';
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === name) {
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        document.getElementById('csv-upload-form-inner').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData();
+            const csvFile = document.getElementById('csv-file').files[0];
+            formData.append('csv_file', csvFile);
+
+            try {
+                const response = await fetch('/api/upload-csv-work-orders/', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                const result = await response.json();
+                console.log('Response from /api/upload-csv-work-orders/:', result);
+                if (result.status === 'success') {
+                    alert('Work orders uploaded successfully!');
+                    csvUploadForm.style.display = 'none';
+                    fetchWorkOrders();
+                } else {
+                    alert(`Failed to upload work orders: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error uploading CSV:', error);
+                alert(`An error occurred while uploading the CSV: ${error.message}`);
+            }
+        });
+
+        routeWoButton.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('#work-orders-body input[type="checkbox"]:checked');
+            const selectedTicketNumbers = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+            if (selectedTicketNumbers.length === 0) {
+                alert('Please select at least one work order to route.');
+                return;
+            }
+            try {
+                const response = await fetch('/api/schedule-selected/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ ticket_numbers: selectedTicketNumbers }),
+                    credentials: 'same-origin'
+                });
+                const result = await response.json();
+                console.log('Response from /api/schedule-selected/:', result);
+                if (result.status === 'success' || result.status === 'partial') {
+                    let message = result.scheduled.length > 0
+                        ? 'Work orders scheduled successfully'
+                        : 'Failed to schedule';
+                    if (result.unscheduled.length > 0) {
+                        message += result.scheduled.length > 0
+                            ? `, except ${result.unscheduled.join(', ')}.`
+                            : ` ${result.unscheduled.join(', ')}.`;
+                    } else {
+                        message += '.';
+                    }
+                    alert(message);
+                    fetchWorkOrders();
+                    window.location.href = '/schedule/';
+                } else {
+                    alert(`Failed to schedule work orders: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error scheduling work orders:', error);
+                alert(`An error occurred while scheduling the work orders: ${error.message}`);
+            }
+        });
+
+        // Add the submit button event listener
+        const submitWoButton = document.getElementById('submit-wo-button');
+        submitWoButton.addEventListener('click', async () => {
+            const selectedCheckboxes = document.querySelectorAll('#work-orders-body input[type="checkbox"]:checked');
+            const selectedTicketNumbers = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+            
+            if (selectedTicketNumbers.length === 0) {
+                alert('Please select at least one work order to submit.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/submit-selected/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ ticket_numbers: selectedTicketNumbers }),
+                    credentials: 'same-origin'
+                });
+                
+                const result = await response.json();
+                console.log('Response from /api/submit-selected/:', result);
+                
+                if (result.status === 'success') {
+                    alert('Work orders updated to submitted status successfully!');
+                    fetchWorkOrders(); // Refresh the work orders list
+                } else {
+                    alert(`Failed to update work orders: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error submitting work orders:', error);
+                alert(`An error occurred while submitting the work orders: ${error.message}`);
+            }
+        });
+
+        // Initialize filters after work orders are fetched
+        fetchWorkOrders().then(() => {
+            initializeFilters();
+        });
+    </script>
+</body>
+</html>

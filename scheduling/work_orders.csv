@@ -1,0 +1,28 @@
+ticket_number,activity_type,address,customer_availability,status
+WO-4,Installation,"100 N Michigan Ave, Chicago, IL 60601","9am-12pm Mon, Thu",pending
+WO-5,Service,"200 W Madison St, Chicago, IL 60606","1pm-4pm Tue, Fri",pending
+WO-6,Installation,"300 S Wacker Dr, Chicago, IL 60606","10am-2pm Wed, Sat",pending
+WO-7,Service,"400 N State St, Chicago, IL 60654","8am-11am Mon, Wed",pending
+WO-8,Installation,"500 N Dearborn St, Chicago, IL 60654","2pm-5pm Tue, Thu",pending
+WO-9,Service,"600 W Chicago Ave, Chicago, IL 60654","9am-1pm Fri, Sat",pending
+WO-10,Installation,"700 N LaSalle Dr, Chicago, IL 60654","11am-3pm Mon, Wed",pending
+WO-11,Service,"800 S Clark St, Chicago, IL 60605","8am-12pm Tue, Fri",pending
+WO-12,Installation,"900 S Wabash Ave, Chicago, IL 60605","1pm-5pm Wed, Thu",pending
+WO-13,Service,"1000 N Lake Shore Dr, Chicago, IL 60611","10am-2pm Mon, Sat",pending
+WO-14,Installation,"1100 W Randolph St, Chicago, IL 60607","9am-3pm Tue, Fri",pending
+WO-15,Service,"1200 N Halsted St, Chicago, IL 60642","8am-1pm Wed, Thu",pending
+WO-16,Installation,"1300 W Division St, Chicago, IL 60642","11am-4pm Mon, Fri",pending
+WO-17,Service,"1400 N Ashland Ave, Chicago, IL 60622","9am-12pm Tue, Sat",pending
+WO-18,Installation,"1500 W Fullerton Ave, Chicago, IL 60614","1pm-5pm Wed, Thu",pending
+WO-19,Service,"1600 N Lincoln Ave, Chicago, IL 60614","10am-2pm Mon, Fri",pending
+WO-20,Installation,"1700 W Belmont Ave, Chicago, IL 60657","8am-11am Tue, Sat",pending
+WO-21,Service,"1800 N Clybourn Ave, Chicago, IL 60614","12pm-3pm Wed, Thu",pending
+WO-22,Installation,"1900 W Addison St, Chicago, IL 60613","9am-1pm Mon, Fri",pending
+WO-23,Service,"2000 N Damen Ave, Chicago, IL 60647","11am-4pm Tue, Sat",pending
+WO-24,Installation,"2100 W Armitage Ave, Chicago, IL 60647","8am-12pm Wed, Thu",pending
+WO-25,Service,"2200 N Western Ave, Chicago, IL 60647","1pm-5pm Mon, Fri",pending
+WO-26,Installation,"2300 W Logan Blvd, Chicago, IL 60647","10am-2pm Tue, Sat",pending
+WO-27,Service,"2400 N Milwaukee Ave, Chicago, IL 60647","9am-3pm Wed, Thu",pending
+WO-28,Installation,"2500 W Diversey Ave, Chicago, IL 60647","8am-1pm Mon, Fri",pending
+WO-29,Service,"2600 N Kedzie Ave, Chicago, IL 60647","11am-4pm Tue, Sat",pending
+WO-30,Installation,"2700 W North Ave, Chicago, IL 60647","9am-12pm Wed, Thu",pending

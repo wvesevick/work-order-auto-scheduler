@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Center</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+    
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+    
+        .header {
+            background-color: #2a2a2a;
+            padding: 20px 40px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            z-index: 1000;
+        }
+    
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+            color: #e0e0e0;
+            text-align: center;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+        }
+    
+        .header img {
+            position: absolute;
+            right: 20px;
+            height: 2em;
+            width: auto;
+            border-radius: 15px;
+        }
+    
+        #menu-button {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            position: absolute;
+            left: 20px;
+        }
+    
+        .dropdown {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1002;
+            display: none;
+            overflow: hidden;
+            width: 200px;
+        }
+    
+        .dropdown-item {
+            padding: 10px 20px;
+            color: #e0e0e0;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.2s ease;
+        }
+    
+        .dropdown-item:hover {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+        }
+    
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: #333;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+            transition: left 0.3s ease;
+            z-index: 1001;
+            border-radius: 0 15px 15px 0;
+        }
+    
+        .sidebar-content {
+            padding: 20px;
+        }
+    
+        .sidebar h3 {
+            margin: 0 0 20px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+    
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+    
+        .sidebar li {
+            margin: 10px 0;
+        }
+    
+        .sidebar a {
+            color: #00b7ff;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+    
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+    
+        .arrow {
+            font-size: 0.8em;
+        }
+    
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            margin-top: 80px;
+            margin-bottom: 20px;
+            justify-content: flex-start;
+        }
+    
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+    
+        .nav-buttons button {
+            padding: 8px 12px;
+            margin-right: 5px;
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    
+        .nav-buttons button:hover {
+            background-color: #0095cc;
+        }
+    
+        .week-dates {
+            display: none;
+        }
+    
+        .day-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    
+        .day-buttons button {
+            padding: 8px 12px;
+            margin: 0 5px;
+            background-color: #444;
+            color: #e0e0e0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+    
+        .day-buttons button .date {
+            display: block;
+            font-size: 0.6em;
+            margin-top: 2px;
+        }
+    
+        .day-buttons button.active {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+        }
+    
+        .day-buttons button.active .date {
+            color: #1a1a1a;
+        }
+    
+        .day-buttons button:hover {
+            background-color: #666;
+        }
+    
+        .day-buttons button:hover .date {
+            color: #e0e0e0;
+        }
+    
+        .day-section {
+            margin-bottom: 40px;
+            background-color: #2a2a2a;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+    
+        .day-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    
+        .day-header h2 {
+            font-size: 1.8em;
+            color: #e0e0e0;
+            margin: 0;
+            text-align: center;
+            flex: 1;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    
+        .day-header .buttons-left, .day-header .buttons-right {
+            display: flex;
+            align-items: center;
+        }
+    
+        .back-button, .toggle-button, #schedule-all-button {
+            display: inline-block;
+            margin: 0 10px 0 0;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    
+        .back-button {
+            background-color: #ff6f61;
+            color: #1a1a1a;
+        }
+    
+        .back-button:hover {
+            background-color: #e65a50;
+        }
+    
+        .toggle-button {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+        }
+    
+        .toggle-button:hover {
+            background-color: #0095cc;
+        }
+    
+        #schedule-all-button {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+    
+        #schedule-all-button:hover {
+            background-color: #0095cc;
+        }
+    
+        #add-wo-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1001;
+            width: 300px;
+            height: 250px;
+        }
+    
+        #add-wo-form h3 {
+            margin-top: 0;
+            color: #e0e0e0;
+        }
+    
+        #add-wo-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e0e0;
+        }
+    
+        #add-wo-form input, #add-wo-form select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+    
+        #add-wo-form button {
+            padding: 8px 12px;
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    
+        #add-wo-form button:hover {
+            background-color: #0095cc;
+        }
+    
+        #search-wo-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1001;
+            width: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    
+        #search-wo-popup h3 {
+            margin-top: 0;
+            color: #e0e0e0;
+        }
+    
+        #search-wo-popup input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+    
+        #search-wo-popup ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+    
+        #search-wo-popup li {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+            color: #e0e0e0;
+        }
+    
+        #search-wo-popup li:hover {
+            background-color: #444;
+        }
+    
+        #search-wo-popup button {
+            padding: 8px 12px;
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+    
+        #search-wo-popup button:hover {
+            background-color: #0095cc;
+        }
+    
+        #confirm-wo-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1001;
+            width: 300px;
+            text-align: center;
+        }
+    
+        #confirm-wo-popup p {
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+    
+        #confirm-wo-popup button {
+            padding: 8px 12px;
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+    
+        #confirm-wo-popup button:hover {
+            background-color: #0095cc;
+        }
+    
+        #status-popup {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1002;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            min-width: 120px;
+        }
+    
+        #status-popup button {
+            display: block;
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    
+        #status-popup button:hover {
+            background-color: #0095cc;
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+    
+        th {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    
+        td {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+    
+        .technician-cell {
+            text-align: left;
+            background-color: #2a2a2a;
+            font-weight: 500;
+            color: #00b7ff;
+            cursor: pointer;
+        }
+    
+        .technician-cell:hover {
+            color: #0095cc;
+        }
+    
+        .technician-cell .address {
+            font-size: 0.9em;
+            color: #a0a0a0;
+            display: block;
+            margin-top: 5px;
+        }
+    
+        .work-order {
+            background-color: #444;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            position: relative;
+            pointer-events: auto;
+        }
+
+        .work-order * {
+            pointer-events: none;
+        }
+
+        .work-order.scheduled {
+            border: 2px solid #00f;
+        }
+
+        .work-order.complete {
+            border: 2px solid #0f0;
+        }
+
+        .work-order:hover {
+            transform: scale(1.05);
+        }
+
+        .work-order.loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .work-order p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .work-order .ticket {
+            font-weight: 600;
+            color: #00b7ff;
+        }
+
+        .work-order .type {
+            color: #ff6f61;
+        }
+
+        .work-order .site-name {
+            color: #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .work-order .address {
+            color: #a0a0a0;
+            font-size: 0.9em;
+        }
+
+        .work-order .availability {
+            color: #ccc;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .work-order .status {
+            color: #e0e0e0;
+            font-size: 0.9em;
+        }
+    
+        .empty {
+            color: #666;
+            font-style: italic;
+        }
+    
+        .empty-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+    
+        .add-wo-text {
+            color: #00b7ff;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95em;
+            margin-top: 10px;
+            display: inline-block;
+        }
+    
+        .add-wo-text:hover {
+            color: #0095cc;
+        }
+    
+        .error {
+            color: #ff6f61;
+            text-align: center;
+        }
+    
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .route-summary {
+            margin: 8px 0 14px 0;
+            color: #8fd8ff;
+            font-size: 0.95em;
+            text-align: right;
+        }
+
+        .osm-stop-marker {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #00b7ff;
+            color: #111;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #111;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        .osm-stop-marker.home {
+            background: #ffcf5c;
+        }
+
+        .route-time-badge {
+            background: rgba(0, 0, 0, 0.78);
+            border: 1px solid #00b7ff;
+            color: #d8f3ff;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 2px 8px;
+            white-space: nowrap;
+        }
+
+        .leaflet-popup-content-wrapper,
+        .leaflet-popup-tip {
+            background: #1f1f1f;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+        }
+    
+        .gm-style-iw {
+            background-color: #fff;
+            color: #1a1a1a !important;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    
+        .gm-style-iw-d {
+            overflow: auto !important;
+        }
+    
+        .gm-style-iw div {
+            color: #1a1a1a !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button id="menu-button">☰</button>
+        <h1 id="header-title">Schedule</h1>
+        <div id="activity-dropdown" class="dropdown">
+            <div class="dropdown-item" data-activity="Service">Service</div>
+            <div class="dropdown-item" data-activity="Ice">Ice</div>
+            <div class="dropdown-item" data-activity="PM">PM</div>
+            <div class="dropdown-item" data-activity="Installation">Installation</div>
+            <div class="dropdown-item" data-activity="All">All</div>
+        </div>
+        <img src="/static/Admin/img/logo.png" alt="Logo">
+    </div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-content">
+            <div id="dispatch-center-toggle">
+                <h3>Dispatch Center <span class="arrow">▼</span></h3>
+            </div>
+            <ul id="sidebar-menu" style="display: none;">
+                <li><a href="/schedule/" id="schedule-link">Schedule</a></li>
+                <li><a href="/work-orders/" id="work-orders-link">Work Orders</a></li>
+                <li><a href="/technicians/" id="technicians-link">Technicians</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container">
+        <div class="nav-bar">
+            <div class="nav-buttons">
+                <button id="prevWeek">Previous Week</button>
+                <button id="nextWeek">Next Week</button>
+            </div>
+            <div class="day-buttons" id="dayButtons"></div>
+        </div>
+        <div id="schedule"></div>
+    </div>
+
+    <!-- Add Work Order Form -->
+    <div id="add-wo-form">
+        <h3>Add New Work Order</h3>
+        <form id="wo-form">
+            <label for="activity-type">Activity Type:</label>
+            <select id="activity-type" name="activity-type">
+                <option value="PM">PM</option>
+                <option value="Service">Service</option>
+                <option value="Ice">Ice</option>
+                <option value="Installation">Installation</option>
+            </select>
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" placeholder="e.g., 123 Main St, Chicago, IL">
+            <label for="availability">Availability (Day and Time Range):</label>
+            <input type="text" id="availability" name="availability" placeholder="e.g., MM/DD/YYYY: 8am-10am, 2pm-4pm">
+            <button type="submit">Add Work Order</button>
+            <button type="button" id="close-form">Close</button>
+        </form>
+    </div>
+
+    <!-- Search Work Order Popup -->
+    <div id="search-wo-popup">
+        <h3>Search Work Orders</h3>
+        <input type="text" id="wo-search" placeholder="Search by ticket number or address">
+        <ul id="wo-search-results"></ul>
+        <button id="close-search-popup">Close</button>
+    </div>
+
+    <!-- Confirm Work Order Popup -->
+    <div id="confirm-wo-popup">
+        <p id="confirm-message"></p>
+        <button id="confirm-yes">Yes</button>
+        <button id="confirm-no">No</button>
+    </div>
+
+    <!-- Status Popup -->
+    <div id="status-popup">
+        <button data-status="submitted">Submitted</button>
+        <button data-status="pending">Pending</button>
+        <button data-status="scheduled">Scheduled</button>
+        <button data-status="complete">Complete</button>
+    </div>
+
+    <script>
+        let map, directionsService, directionsRenderer, showDistance = true;
+        let scheduleData = [];
+        let technicianActivityMap = {};
+        let currentWeekStart = null;
+        let currentDisplayDate = null;
+        let selectedTechnician = null;
+        let selectedActivityType = 'All';
+        const now = new Date();
+        const initialStartDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        function toISODateUTC(dateObj) {
+            return dateObj.toISOString().split('T')[0];
+        }
+
+        function hasScheduleEntriesForDate(dateStr) {
+            return scheduleData.some(tech =>
+                tech.schedule.some(entry =>
+                    entry.start_time.split('T')[0] === dateStr &&
+                    ['pending', 'scheduled', 'complete'].includes(entry.work_order.status)
+                )
+            );
+        }
+
+        function getFirstDateWithEntriesInWeek(weekStartDate) {
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(weekStartDate);
+                date.setUTCDate(weekStartDate.getUTCDate() + i);
+                const dateStr = toISODateUTC(date);
+                if (hasScheduleEntriesForDate(dateStr)) {
+                    return dateStr;
+                }
+            }
+            return null;
+        }
+
+        async function geocodeAddressOpenStreetMap(address) {
+            const key = `osm_geocode_${address}`;
+            const cached = localStorage.getItem(key);
+            if (cached) {
+                try {
+                    return JSON.parse(cached);
+                } catch (error) {
+                    localStorage.removeItem(key);
+                }
+            }
+
+            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
+                throw new Error(`Geocode failed (${response.status})`);
+            }
+            const results = await response.json();
+            if (!results.length) {
+                throw new Error('Address not found');
+            }
+            const coords = {
+                lat: parseFloat(results[0].lat),
+                lon: parseFloat(results[0].lon)
+            };
+            localStorage.setItem(key, JSON.stringify(coords));
+            return coords;
+        }
+
+        function formatDurationSeconds(seconds) {
+            if (!Number.isFinite(seconds) || seconds <= 0) {
+                return '0 min';
+            }
+            const totalMinutes = Math.round(seconds / 60);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            if (!hours) {
+                return `${totalMinutes} min`;
+            }
+            if (!minutes) {
+                return `${hours} hr`;
+            }
+            return `${hours} hr ${minutes} min`;
+        }
+
+        function formatDistanceMeters(meters) {
+            if (!Number.isFinite(meters) || meters <= 0) {
+                return '0 mi';
+            }
+            const miles = meters / 1609.344;
+            return `${miles >= 10 ? miles.toFixed(0) : miles.toFixed(1)} mi`;
+        }
+
+        async function fetchRoadRoute(routeCoords) {
+            if (routeCoords.length < 2) {
+                return null;
+            }
+            const points = routeCoords.map(p => `${p.lon},${p.lat}`).join(';');
+            const url = `https://router.project-osrm.org/route/v1/driving/${points}?overview=full&geometries=geojson&steps=false`;
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
+                throw new Error(`Routing failed (${response.status})`);
+            }
+            const result = await response.json();
+            if (result.code !== 'Ok' || !result.routes || !result.routes.length) {
+                throw new Error(result.message || 'No drivable route found');
+            }
+            return result.routes[0];
+        }
+
+        async function fetchServerRoute(stops) {
+            const response = await fetch('/api/route-preview/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stops })
+            });
+            if (!response.ok) {
+                throw new Error(`Server route failed (${response.status})`);
+            }
+            return response.json();
+        }
+
+        async function renderOpenStreetMapForTechnician(techName) {
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+
+            const daySection = document.createElement('div');
+            daySection.className = 'day-section';
+            const dateObj = new Date(Date.UTC(
+                parseInt(currentDisplayDate.split('-')[0]),
+                parseInt(currentDisplayDate.split('-')[1]) - 1,
+                parseInt(currentDisplayDate.split('-')[2])
+            ));
+            const formattedDate = `${dateObj.getUTCMonth() + 1}/${dateObj.getUTCDate()}/${dateObj.getUTCFullYear()}`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'day-header';
+
+            const buttonsLeft = document.createElement('div');
+            buttonsLeft.className = 'buttons-left';
+            const backButton = document.createElement('button');
+            backButton.className = 'back-button';
+            backButton.textContent = 'Back to Schedule';
+            backButton.addEventListener('click', () => {
+                selectedTechnician = null;
+                renderScheduleForDay(currentDisplayDate);
+            });
+            buttonsLeft.appendChild(backButton);
+
+            const headerH2 = document.createElement('h2');
+            headerH2.textContent = `${formattedDate} - ${techName} (OpenStreetMap)`;
+
+            headerDiv.appendChild(buttonsLeft);
+            headerDiv.appendChild(headerH2);
+            daySection.appendChild(headerDiv);
+
+            const routeSummary = document.createElement('p');
+            routeSummary.className = 'route-summary';
+            routeSummary.textContent = 'Computing route...';
+            daySection.appendChild(routeSummary);
+
+            const mapDiv = document.createElement('div');
+            mapDiv.id = 'map';
+            daySection.appendChild(mapDiv);
+            scheduleDiv.appendChild(daySection);
+
+            if (!window.L) {
+                mapDiv.innerHTML = '<p class="error">Map library failed to load.</p>';
+                return;
+            }
+
+            const map = L.map(mapDiv).setView([41.8781, -87.6298], 11);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            const techData = scheduleData.find(tech => tech.technician === techName);
+            if (!techData) {
+                mapDiv.innerHTML = `<p class="error">No data for ${techName}</p>`;
+                return;
+            }
+
+            const dayEntries = techData.schedule
+                .filter(entry =>
+                    entry.start_time.split('T')[0] === currentDisplayDate &&
+                    ['pending', 'scheduled', 'complete'].includes(entry.work_order.status)
+                )
+                .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+            if (!dayEntries.length) {
+                mapDiv.insertAdjacentHTML('beforeend', '<p class="error">No scheduled assignments for this day.</p>');
+                return;
+            }
+
+            const uniqueEntries = [];
+            const seenAddresses = new Set();
+            dayEntries.forEach(entry => {
+                if (!seenAddresses.has(entry.work_order.address)) {
+                    seenAddresses.add(entry.work_order.address);
+                    uniqueEntries.push(entry);
+                }
+            });
+
+            const homeAddress = techData.home_address || '600 W Jackson Blvd, Chicago, IL 60661';
+            const routeStops = [
+                { label: 'S', title: `Start: ${homeAddress}`, address: homeAddress, isHome: true },
+                ...uniqueEntries.map((entry, index) => ({
+                    label: String(index + 1),
+                    title: `${entry.work_order.ticket_number} - ${entry.work_order.address}`,
+                    address: entry.work_order.address,
+                    details: entry
+                })),
+                { label: 'E', title: `End: ${homeAddress}`, address: homeAddress, isHome: true }
+            ];
+
+            const routeCoords = [];
+            for (const stop of routeStops) {
+                try {
+                    const coords = await geocodeAddressOpenStreetMap(stop.address);
+                    routeCoords.push({ ...coords, stop });
+                } catch (error) {
+                    console.error(`Geocode failed for ${stop.address}:`, error);
+                }
+            }
+
+            if (!routeCoords.length) {
+                mapDiv.innerHTML = '<p class="error">Could not geocode route addresses for map display.</p>';
+                return;
+            }
+
+            routeCoords.forEach(point => {
+                const marker = L.marker([point.lat, point.lon], {
+                    icon: L.divIcon({
+                        className: 'osm-stop-icon',
+                        html: `<div class="osm-stop-marker${point.stop.isHome ? ' home' : ''}">${point.stop.label}</div>`,
+                        iconSize: [26, 26],
+                        iconAnchor: [13, 13]
+                    })
+                }).addTo(map);
+                if (point.stop.details) {
+                    const localTime = new Date(point.stop.details.start_time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    marker.bindPopup(
+                        `<strong>${point.stop.details.work_order.ticket_number}</strong><br>` +
+                        `Slot: ${localTime}<br>` +
+                        `${point.stop.details.work_order.address}<br>` +
+                        `Status: ${point.stop.details.work_order.status}`
+                    );
+                } else {
+                    marker.bindPopup(point.stop.title);
+                }
+            });
+
+            let route = null;
+            let routeSource = 'none';
+            try {
+                const serverRoute = await fetchServerRoute(routeStops.map(stop => stop.address));
+                if (serverRoute.status === 'success' && serverRoute.geometry && serverRoute.geometry.length > 1) {
+                    route = {
+                        geometry: {
+                            coordinates: serverRoute.geometry.map(([lat, lon]) => [lon, lat])
+                        },
+                        legs: (serverRoute.legs || []).map(leg => ({
+                            duration: leg.duration_seconds || 0,
+                            distance: leg.distance_meters || 0
+                        }))
+                    };
+                    routeSource = 'server';
+                } else {
+                    throw new Error(serverRoute.message || 'Server route unavailable');
+                }
+            } catch (error) {
+                console.warn('Server route unavailable, trying OSRM fallback:', error);
+                try {
+                    route = await fetchRoadRoute(routeCoords);
+                    routeSource = 'osrm';
+                } catch (fallbackError) {
+                    console.error('OSRM route fetch failed, falling back to straight-line display:', fallbackError);
+                }
+            }
+
+            if (route && route.geometry && route.geometry.coordinates && route.geometry.coordinates.length > 1) {
+                const roadPoints = route.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+                const routeLine = L.polyline(roadPoints, { color: '#00b7ff', weight: 5, opacity: 0.9 }).addTo(map);
+                map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+
+                const legs = route.legs || [];
+                const totalSeconds = legs.reduce((sum, leg) => sum + (leg.duration || 0), 0);
+                const totalMeters = legs.reduce((sum, leg) => sum + (leg.distance || 0), 0);
+                const sourceLabel = routeSource === 'server' ? 'Google route' : 'OSM route';
+                routeSummary.textContent = `${sourceLabel}: ${formatDurationSeconds(totalSeconds)} • ${formatDistanceMeters(totalMeters)} • ${Math.max(legs.length - 1, 0)} stops`;
+
+                legs.forEach((leg, index) => {
+                    if (!routeCoords[index + 1]) {
+                        return;
+                    }
+                    const lat = (routeCoords[index].lat + routeCoords[index + 1].lat) / 2;
+                    const lon = (routeCoords[index].lon + routeCoords[index + 1].lon) / 2;
+                    L.marker([lat, lon], {
+                        icon: L.divIcon({
+                            className: 'route-time-icon',
+                            html: `<div class="route-time-badge">${formatDurationSeconds(leg.duration || 0)}</div>`,
+                            iconSize: [84, 20],
+                            iconAnchor: [42, 10]
+                        }),
+                        interactive: false
+                    }).addTo(map);
+                });
+            } else {
+                const polylinePoints = routeCoords.map(p => [p.lat, p.lon]);
+                if (polylinePoints.length > 1) {
+                    const polyline = L.polyline(polylinePoints, { color: '#00b7ff', weight: 4, dashArray: '8 8' }).addTo(map);
+                    map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+                    routeSummary.textContent = 'Road route unavailable right now; showing fallback line.';
+                } else {
+                    map.setView(polylinePoints[0], 13);
+                    routeSummary.textContent = 'Only one mapped stop found.';
+                }
+            }
+        }
+
+        function initMap() {
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            console.log('Google Maps API loaded and initialized');
+            fetchTechnicians().then(() => fetchSchedule(true));
+        }
+
+        async function fetchTechnicians() {
+            try {
+                console.log('Fetching technician data from /api/technicians/');
+                const response = await fetch('/api/technicians/', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    mode: 'same-origin',
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const technicians = await response.json();
+                console.log('Fetched technician data:', technicians);
+                technicianActivityMap = {};
+                technicians.forEach(tech => {
+                    technicianActivityMap[tech.name] = tech.activity_type;
+                });
+                console.log('Technician activity map:', technicianActivityMap);
+            } catch (error) {
+                console.error('Error fetching technicians:', error);
+                document.getElementById('schedule').innerHTML = `<p class="error">Error loading technicians: ${error.message}</p>`;
+            }
+        }
+
+        async function fetchSchedule(forceFetch = false) {
+            const cacheKey = 'scheduleData';
+            const cacheTimestampKey = 'scheduleDataTimestamp';
+            const cachedData = localStorage.getItem(cacheKey);
+            const cachedTimestamp = localStorage.getItem(cacheTimestampKey);
+            const cacheAge = cachedTimestamp ? (Date.now() - parseInt(cachedTimestamp)) / 1000 : Infinity;
+            console.log(`fetchSchedule called with forceFetch=${forceFetch}, cachedData exists: ${!!cachedData}, cache age: ${cacheAge}s`);
+
+            if (!forceFetch && cachedData && cacheAge < 300) {
+                scheduleData = JSON.parse(cachedData);
+                console.log('Loaded schedule data from cache:', scheduleData);
+                if (!currentWeekStart) {
+                    initializeSchedule();
+                } else {
+                    renderScheduleForDay(currentDisplayDate);
+                }
+                return;
+            }
+
+            try {
+                console.log('Fetching fresh schedule data from /api/schedule/');
+                const response = await fetch(`/api/schedule/`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    mode: 'same-origin',
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                scheduleData = await response.json();
+                console.log('Fetched schedule data from server:', scheduleData);
+                localStorage.setItem(cacheKey, JSON.stringify(scheduleData));
+                localStorage.setItem(cacheTimestampKey, Date.now().toString());
+
+                if (response.headers.get('X-Cache-Invalidate') === 'true') {
+                    console.log('Cache invalidation header received, clearing localStorage');
+                    localStorage.removeItem('scheduleData');
+                    localStorage.removeItem('scheduleDataTimestamp');
+                    for (let key in localStorage) {
+                        if (key.startsWith('mapData_')) {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                }
+
+                if (!currentWeekStart) {
+                    initializeSchedule();
+                } else {
+                    renderScheduleForDay(currentDisplayDate);
+                }
+            } catch (error) {
+                console.error('Error fetching schedule:', error);
+                document.getElementById('schedule').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        function initializeSchedule() {
+            const startDate = new Date(Date.UTC(
+                parseInt(initialStartDate.split('-')[0]),
+                parseInt(initialStartDate.split('-')[1]) - 1,
+                parseInt(initialStartDate.split('-')[2])
+            ));
+            const dayOfWeek = startDate.getUTCDay();
+            currentWeekStart = new Date(startDate);
+            // Use the current week's Sunday (not next Sunday).
+            currentWeekStart.setUTCDate(startDate.getUTCDate() - dayOfWeek);
+
+            const todayIso = toISODateUTC(startDate);
+            const firstDateWithEntries = getFirstDateWithEntriesInWeek(currentWeekStart);
+            currentDisplayDate = hasScheduleEntriesForDate(todayIso)
+                ? todayIso
+                : (firstDateWithEntries || toISODateUTC(currentWeekStart));
+            renderDayButtons();
+            renderScheduleForDay(currentDisplayDate);
+        }
+
+        function renderDayButtons() {
+            const dayButtonsDiv = document.getElementById('dayButtons');
+            dayButtonsDiv.innerHTML = '';
+            daysOfWeek.forEach((day, index) => {
+                const button = document.createElement('button');
+                const date = new Date(currentWeekStart);
+                date.setUTCDate(currentWeekStart.getUTCDate() + index);
+                const formattedDate = `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear().toString().slice(-2)}`;
+                button.innerHTML = `
+                    ${day}
+                    <span class="date">${formattedDate}</span>
+                `;
+                button.addEventListener('click', () => {
+                    const newDisplayDate = new Date(currentWeekStart);
+                    newDisplayDate.setUTCDate(currentWeekStart.getUTCDate() + index);
+                    currentDisplayDate = newDisplayDate.toISOString().split('T')[0];
+                    if (selectedTechnician) {
+                        renderMapForTechnician(selectedTechnician);
+                    } else {
+                        renderScheduleForDay(currentDisplayDate);
+                    }
+                    updateActiveDayButton(index);
+                });
+                dayButtonsDiv.appendChild(button);
+            });
+            const activeIndex = Math.min(Math.max((new Date(currentDisplayDate) - new Date(currentWeekStart)) / (1000 * 60 * 60 * 24), 0), 6);
+            updateActiveDayButton(activeIndex);
+        }
+
+        function updateActiveDayButton(activeIndex) {
+            const buttons = document.querySelectorAll('.day-buttons button');
+            buttons.forEach((button, index) => {
+                button.classList.toggle('active', index === activeIndex);
+            });
+        }
+
+        function renderScheduleForDay(displayDate) {
+            if (!displayDate) {
+                console.error('No display date provided, initializing schedule');
+                initializeSchedule();
+                return;
+            }
+
+            selectedTechnician = null;
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+            console.log(`Rendering schedule for ${displayDate} with activity type: ${selectedActivityType}`);
+
+            const dayEntries = [];
+            const filteredTechnicians = selectedActivityType === 'All'
+                ? scheduleData
+                : scheduleData.filter(tech => technicianActivityMap[tech.technician] === selectedActivityType);
+
+            if (filteredTechnicians.length === 0) {
+                scheduleDiv.innerHTML = `<p class="error">No technicians found for activity type: ${selectedActivityType}</p>`;
+                console.log(`No technicians match activity type: ${selectedActivityType}`);
+                return;
+            }
+
+            filteredTechnicians.forEach(tech => {
+                const entries = tech.schedule.filter(entry =>
+                    entry.start_time.split('T')[0] === displayDate &&
+                    ['pending', 'scheduled', 'complete'].includes(entry.work_order.status)
+                );
+                entries.forEach(entry => {
+                    entry.technician = tech.technician;
+                    entry.home_address = tech.home_address;
+                    dayEntries.push(entry);
+                });
+            });
+            console.log(`Found ${dayEntries.length} entries for ${displayDate}:`, dayEntries);
+
+            const daySection = document.createElement('div');
+            daySection.className = 'day-section';
+
+            const dateObj = new Date(Date.UTC(
+                parseInt(displayDate.split('-')[0]),
+                parseInt(displayDate.split('-')[1]) - 1,
+                parseInt(displayDate.split('-')[2])
+            ));
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+            });
+            daySection.innerHTML = `<h2>${formattedDate}</h2>`;
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Technician</th>
+                        <th>8-10</th>
+                        <th>10-12</th>
+                        <th>12-2</th>
+                        <th>2-4</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+
+            const technicians = filteredTechnicians.map(tech => tech.technician);
+            technicians.forEach(techName => {
+                const row = document.createElement('tr');
+                const techData = scheduleData.find(t => t.technician === techName);
+                const techEntries = dayEntries.filter(entry => entry.technician === techName);
+                const homeAddress = techData ? techData.home_address : 'Unknown Address';
+                const techCell = document.createElement('td');
+                techCell.className = 'technician-cell';
+                techCell.innerHTML = `
+                    ${techName}
+                    <span class="address">${homeAddress}</span>
+                `;
+                techCell.addEventListener('click', () => {
+                    selectedTechnician = techName;
+                    renderMapForTechnician(selectedTechnician);
+                });
+                row.appendChild(techCell);
+
+                const timeSlots = [
+                    { start: '08:00:00', end: '10:00:00' },
+                    { start: '10:00:00', end: '12:00:00' },
+                    { start: '12:00:00', end: '14:00:00' },
+                    { start: '14:00:00', end: '16:00:00' }
+                ];
+                timeSlots.forEach((slot, slotIndex) => {
+                    const slotEntry = techEntries.find(entry => {
+                        const startTime = entry.start_time.split('T')[1];
+                        return startTime.startsWith(slot.start);
+                    });
+                    const cell = document.createElement('td');
+                    if (slotEntry) {
+                        const wo = slotEntry.work_order;
+                        const statusClass = wo.status === 'scheduled' ? 'scheduled' : wo.status === 'complete' ? 'complete' : 'pending';
+                        cell.innerHTML = `
+                            <div class="work-order ${statusClass}" data-ticket="${wo.ticket_number}">
+                                <p class="ticket">${wo.ticket_number}</p>
+                                <p class="type">${wo.activity_type}</p>
+                                <p class="site-name">${wo.site_name || ''}</p>
+                                <p class="address">${wo.address}</p>
+                                <p class="availability">${wo.customer_availability || 'No availability specified'}</p>
+                                <p class="status">Status: ${wo.status || 'Unknown'}</p>
+                            </div>
+                        `;
+                        cell.querySelector('.work-order').addEventListener('click', (e) => showStatusPopup(e, wo.ticket_number, cell));
+                    } else {
+                        cell.innerHTML = `
+                            <div class="empty-container">
+                                <p class="empty">No Assignment</p>
+                                <span class="add-wo-text" data-technician="${techName}" data-slot-start="${slot.start}" data-date="${displayDate}">Add Work Order</span>
+                            </div>
+                        `;
+                        cell.querySelector('.add-wo-text').addEventListener('click', () => showSearchWorkOrderPopup(techName, slot.start, displayDate));
+                    }
+                    row.appendChild(cell);
+                });
+                tbody.appendChild(row);
+            });
+            daySection.appendChild(table);
+
+            const scheduleAllButton = document.createElement('button');
+            scheduleAllButton.id = 'schedule-all-button';
+            scheduleAllButton.textContent = 'Schedule All';
+            scheduleAllButton.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/api/schedule-all/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ display_date: displayDate })
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        alert(result.message);
+                        clearAllCaches();
+                        await fetchSchedule(true);
+                    } else {
+                        alert(`Failed to schedule all: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error scheduling all:', error);
+                    alert('An error occurred while scheduling all work orders.');
+                }
+            });
+            daySection.appendChild(scheduleAllButton);
+
+            scheduleDiv.appendChild(daySection);
+            console.log(`Rendered schedule for ${displayDate} with ${dayEntries.length} entries`);
+        }
+
+        async function showSearchWorkOrderPopup(technician, slotStart, date) {
+            const popup = document.getElementById('search-wo-popup');
+            const searchInput = document.getElementById('wo-search');
+            const resultsList = document.getElementById('wo-search-results');
+            const closeButton = document.getElementById('close-search-popup');
+            const techActivity = technicianActivityMap[technician];
+
+            popup.style.display = 'block';
+            searchInput.value = '';
+            resultsList.innerHTML = '';
+
+            async function fetchWorkOrders(searchTerm = '') {
+                try {
+                    const response = await fetch('/api/work-orders/', {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' },
+                        mode: 'same-origin',
+                        credentials: 'same-origin'
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    const workOrders = await response.json();
+                    resultsList.innerHTML = '';
+                    const filteredWorkOrders = workOrders.filter(wo =>
+                        wo.status === 'submitted' &&
+                        wo.activity_type === techActivity &&
+                        (wo.ticket_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         wo.address.toLowerCase().includes(searchTerm.toLowerCase()))
+                    );
+                    if (filteredWorkOrders.length === 0) {
+                        resultsList.innerHTML = '<li>No work orders found</li>';
+                    } else {
+                        filteredWorkOrders.forEach(wo => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `${wo.ticket_number} - ${wo.address}`;
+                            li.addEventListener('click', () => {
+                                popup.style.display = 'none';
+                                showConfirmWorkOrderPopup(wo.ticket_number, technician, slotStart, date);
+                            });
+                            resultsList.appendChild(li);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching work orders:', error);
+                    resultsList.innerHTML = `<li>Error: ${error.message}</li>`;
+                }
+            }
+
+            searchInput.addEventListener('input', () => {
+                fetchWorkOrders(searchInput.value);
+            });
+
+            closeButton.addEventListener('click', () => {
+                popup.style.display = 'none';
+            });
+
+            fetchWorkOrders();
+        }
+
+        function showConfirmWorkOrderPopup(ticketNumber, technician, slotStart, date) {
+            const popup = document.getElementById('confirm-wo-popup');
+            const message = document.getElementById('confirm-message');
+            const yesButton = document.getElementById('confirm-yes');
+            const noButton = document.getElementById('confirm-no');
+
+            message.textContent = `Would you like to add ${ticketNumber} to ${technician}'s schedule?`;
+            popup.style.display = 'block';
+
+            yesButton.onclick = async () => {
+                try {
+                    const response = await fetch('/api/assign-work-order/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ticket_number: ticketNumber,
+                            technician: technician,
+                            date: date,
+                            slot_start: slotStart
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        alert('Work order assigned successfully');
+                        clearAllCaches();
+                        await fetchSchedule(true);
+                    } else {
+                        alert(`Failed to assign work order: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error assigning work order:', error);
+                    alert('An error occurred while assigning the work order.');
+                }
+                popup.style.display = 'none';
+            };
+
+            noButton.onclick = () => {
+                popup.style.display = 'none';
+            };
+        }
+
+        function isCachedMapDataValid(techName, cachedMapData) {
+            const techData = scheduleData.find(tech => tech.technician === techName);
+            if (!techData) return false;
+
+            const dayEntries = techData.schedule
+                .filter(entry =>
+                    entry.start_time.split('T')[0] === currentDisplayDate &&
+                    ['pending', 'scheduled', 'complete'].includes(entry.work_order.status)
+                )
+                .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+            const uniqueAddresses = [...new Set(dayEntries.map(entry => entry.work_order.address))];
+            const cachedAddresses = cachedMapData.markers
+                .filter(marker => marker.label !== 'S' && marker.label !== 'E')
+                .map(marker => marker.title.split(': ')[1] || marker.title);
+
+            if (uniqueAddresses.length !== cachedAddresses.length) {
+                console.log('Cached map data invalid: mismatched number of stops');
+                return false;
+            }
+
+            const addressesMatch = uniqueAddresses.every(addr =>
+                cachedAddresses.includes(addr)
+            ) && cachedAddresses.every(addr =>
+                uniqueAddresses.includes(addr)
+            );
+
+            if (!addressesMatch) {
+                console.log('Cached map data invalid: addresses do not match');
+                return false;
+            }
+
+            return true;
+        }
+
+        function renderMapForTechnician(techName) {
+            if (!window.google || !window.google.maps || !directionsService || !directionsRenderer) {
+                renderOpenStreetMapForTechnician(techName);
+                return;
+            }
+
+            const cacheKey = `mapData_${techName}_${currentDisplayDate}`;
+            const cachedMapDataRaw = localStorage.getItem(cacheKey);
+            let cachedMapData = cachedMapDataRaw ? JSON.parse(cachedMapDataRaw) : null;
+
+            if (cachedMapData && isCachedMapDataValid(techName, cachedMapData)) {
+                console.log(`Loaded valid map data from cache for ${techName} on ${currentDisplayDate}`);
+                renderCachedMap(cachedMapData.route, cachedMapData.markers, cachedMapData.travelMarkers, cachedMapData.travelLabels);
+                return;
+            } else if (cachedMapData) {
+                console.log(`Cached map data invalid for ${techName} on ${currentDisplayDate}, fetching fresh data`);
+                localStorage.removeItem(cacheKey);
+            }
+
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+
+            const daySection = document.createElement('div');
+            daySection.className = 'day-section';
+            const dateObj = new Date(Date.UTC(
+                parseInt(currentDisplayDate.split('-')[0]),
+                parseInt(currentDisplayDate.split('-')[1]) - 1,
+                parseInt(currentDisplayDate.split('-')[2])
+            ));
+            const formattedDate = `${dateObj.getUTCMonth() + 1}/${dateObj.getUTCDate()}/${dateObj.getUTCFullYear()}`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'day-header';
+
+            const buttonsLeft = document.createElement('div');
+            buttonsLeft.className = 'buttons-left';
+            const backButton = document.createElement('button');
+            backButton.className = 'back-button';
+            backButton.textContent = 'Back to Schedule';
+            backButton.addEventListener('click', () => {
+                selectedTechnician = null;
+                renderScheduleForDay(currentDisplayDate);
+            });
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'toggle-button';
+            toggleButton.textContent = showDistance ? 'Hide Distance' : 'Show Distance';
+            toggleButton.addEventListener('click', () => {
+                showDistance = !showDistance;
+                console.log(`Toggled showDistance to ${showDistance}`);
+                toggleButton.textContent = showDistance ? 'Hide Distance' : 'Show Distance';
+                if (map && map.travelMarkers) {
+                    console.log(`Updating ${map.travelMarkers.length} travel markers`);
+                    map.travelMarkers.forEach((marker, index) => {
+                        if (showDistance) {
+                            marker.setMap(map);
+                            map.travelLabels[index].open(map, marker);
+                        } else {
+                            marker.setMap(null);
+                            map.travelLabels[index].close();
+                        }
+                    });
+                }
+            });
+            buttonsLeft.appendChild(backButton);
+            buttonsLeft.appendChild(toggleButton);
+
+            const headerH2 = document.createElement('h2');
+            headerH2.textContent = `${formattedDate} - ${techName}`;
+
+            headerDiv.appendChild(buttonsLeft);
+            headerDiv.appendChild(headerH2);
+
+            daySection.appendChild(headerDiv);
+
+            const mapDiv = document.createElement('div');
+            mapDiv.id = 'map';
+            daySection.appendChild(mapDiv);
+            scheduleDiv.appendChild(daySection);
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: { lat: 41.8781, lng: -87.6298 }
+            });
+            directionsRenderer.setMap(map);
+            directionsRenderer.setOptions({ suppressMarkers: true });
+
+            if (map.markers) map.markers.forEach(marker => marker.setMap(null));
+            if (map.travelMarkers) map.travelMarkers.forEach(marker => marker.setMap(null));
+            if (map.travelLabels) map.travelLabels.forEach(label => label.close());
+            map.markers = [];
+            map.travelMarkers = [];
+            map.travelLabels = [];
+
+            const techData = scheduleData.find(tech => tech.technician === techName);
+            if (!techData) {
+                mapDiv.innerHTML = `<p class="error">No data for ${techName}</p>`;
+                console.log(`No data found for technician ${techName}`);
+                return;
+            }
+
+            const dayEntries = techData.schedule
+                .filter(entry =>
+                    entry.start_time.split('T')[0] === currentDisplayDate &&
+                    ['pending', 'scheduled', 'complete'].includes(entry.work_order.status)
+                )
+                .sort((a, b) => a.start_time.localeCompare(b.start_time));
+            console.log(`Found ${dayEntries.length} entries for ${techName} on ${currentDisplayDate}:`, dayEntries);
+            if (dayEntries.length === 0) {
+                mapDiv.innerHTML = `<p class="error">No scheduled assignments for ${techName} on this day.</p>`;
+                console.log(`No assignments found for ${techName} on ${currentDisplayDate}`);
+                const homeAddress = techData.home_address || '600 W Jackson Blvd, Chicago, IL 60661';
+                const marker = new google.maps.Marker({
+                    position: { lat: 41.8781, lng: -87.6298 },
+                    map: map,
+                    label: 'H',
+                    title: `Home: ${homeAddress}`
+                });
+                map.markers.push(marker);
+                map.setCenter({ lat: 41.8781, lng: -87.6298 });
+                return;
+            }
+
+            dayEntries.forEach((entry, index) => {
+                console.log(`Raw Entry ${index + 1}: WO-${entry.work_order.ticket_number} at ${entry.work_order.address}, Travel to next: ${entry.travel_to_next} minutes`);
+            });
+
+            const uniqueEntries = [];
+            const seenAddresses = new Set();
+            for (let i = 0; i < dayEntries.length; i++) {
+                const entry = dayEntries[i];
+                const currentAddress = entry.work_order.address;
+                if (!seenAddresses.has(currentAddress)) {
+                    seenAddresses.add(currentAddress);
+                    uniqueEntries.push(entry);
+                }
+            }
+
+            uniqueEntries.forEach((entry, index) => {
+                console.log(`Unique Entry ${index + 1}: WO-${entry.work_order.ticket_number} at ${entry.work_order.address}, Travel to next: ${entry.travel_to_next} minutes`);
+            });
+
+            const waypoints = uniqueEntries.map((entry, index) => {
+                console.log(`Waypoint ${index + 1}: ${entry.work_order.address}`);
+                return {
+                    location: entry.work_order.address,
+                    stopover: true
+                };
+            });
+            const homeAddress = techData.home_address || '600 W Jackson Blvd, Chicago, IL 60661';
+            console.log(`Origin/Destination: ${homeAddress}`);
+
+            const firstLegKey = `${homeAddress}|${uniqueEntries[0].work_order.address}`;
+            let homeToFirstTravelTime;
+            fetch(`/api/get-travel-time/?origin=${encodeURIComponent(homeAddress)}&destination=${encodeURIComponent(uniqueEntries[0].work_order.address)}`)
+                .then(response => response.json())
+                .then(data => {
+                    homeToFirstTravelTime = data.travel_time;
+                    console.log(`Fetched travel time for Home-1 (${firstLegKey}): ${homeToFirstTravelTime} minutes`);
+
+                    directionsService.route({
+                        origin: homeAddress,
+                        destination: homeAddress,
+                        waypoints: waypoints,
+                        travelMode: google.maps.TravelMode.DRIVING,
+                        optimizeWaypoints: false
+                    }, (result, status) => {
+                        if (status === google.maps.DirectionsStatus.OK) {
+                            directionsRenderer.setDirections(result);
+                            console.log('Directions API response:', result);
+                            const route = result.routes[0];
+                            const legs = route.legs;
+                            console.log(`Route has ${legs.length} legs`);
+
+                            const markers = [];
+                            const travelMarkers = [];
+                            const travelLabels = [];
+
+                            const startMarker = new google.maps.Marker({
+                                position: legs[0].start_location,
+                                map: map,
+                                label: 'S',
+                                title: 'Start: ' + homeAddress
+                            });
+                            console.log('Added start marker at:', legs[0].start_location);
+                            markers.push(startMarker);
+
+                            uniqueEntries.forEach((entry, index) => {
+                                const leg = legs[index];
+                                const position = leg.end_location;
+                                const timeSlot = entry.start_time.split('T')[1].startsWith('08:00:00') ? '8-10' :
+                                                entry.start_time.split('T')[1].startsWith('10:00:00') ? '10-12' :
+                                                entry.start_time.split('T')[1].startsWith('12:00:00') ? '12-2' : '2-4';
+                                const infoContent = `
+                                    <div>
+                                        <strong>Stop ${index + 1}</strong><br>
+                                        Time: ${timeSlot}<br>
+                                        Work Order: ${entry.work_order.ticket_number}<br>
+                                        Address: ${entry.work_order.address}
+                                    </div>
+                                `;
+                                const marker = new google.maps.Marker({
+                                    position: position,
+                                    map: map,
+                                    label: {
+                                        text: String(index + 1),
+                                        color: 'white',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold'
+                                    },
+                                    title: entry.work_order.ticket_number
+                                });
+                                console.log(`Added marker for Stop ${index + 1} (${entry.work_order.ticket_number}) at:`, position);
+                                const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                                marker.addListener('mouseover', () => infoWindow.open(map, marker));
+                                marker.addListener('mouseout', () => infoWindow.close());
+                                markers.push(marker);
+                            });
+
+                            const endMarker = new google.maps.Marker({
+                                position: legs[legs.length - 1].end_location,
+                                map: map,
+                                label: 'E',
+                                title: 'End: ' + homeAddress
+                            });
+                            console.log('Added end marker at:', legs[legs.length - 1].end_location);
+                            markers.push(endMarker);
+
+                            legs.forEach((leg, legIndex) => {
+                                let travelTime;
+                                if (legIndex === 0) {
+                                    travelTime = homeToFirstTravelTime;
+                                } else if (legIndex < uniqueEntries.length) {
+                                    travelTime = uniqueEntries[legIndex - 1].travel_to_next;
+                                } else {
+                                    travelTime = uniqueEntries[uniqueEntries.length - 1].travel_to_next;
+                                }
+                                const roundedTravelTime = Math.round(travelTime); // Round the travel time to a whole number
+                                const fullPath = [];
+                                leg.steps.forEach(step => {
+                                    fullPath.push(...step.path);
+                                });
+                                const midPoint = fullPath[Math.floor(fullPath.length / 2)];
+                                const segmentLabel = legIndex === 0 ? `Home-${legIndex + 1}` :
+                                                    legIndex === legs.length - 1 ? `${uniqueEntries.length}-Home` :
+                                                    `${legIndex}-${legIndex + 1}`;
+                                console.log(`Displaying travel time for segment ${segmentLabel}: ${roundedTravelTime} minutes`);
+                                const travelMarker = new google.maps.Marker({
+                                    position: midPoint,
+                                    map: showDistance ? map : null,
+                                    icon: {
+                                        url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                                        scaledSize: new google.maps.Size(20, 20)
+                                    },
+                                    title: `${roundedTravelTime} Min (${segmentLabel})`
+                                });
+                                const travelLabel = new google.maps.InfoWindow({
+                                    content: `${roundedTravelTime} Min<br>${segmentLabel}`
+                                });
+                                travelMarker.addListener('click', () => {
+                                    travelLabel.getMap() ? travelLabel.close() : travelLabel.open(map, travelMarker);
+                                });
+                                if (showDistance) travelLabel.open(map, travelMarker);
+                                console.log(`Added travel marker for ${segmentLabel} at:`, midPoint);
+                                travelMarkers.push(travelMarker);
+                                travelLabels.push(travelLabel);
+                            });
+
+                            map.markers = markers;
+                            map.travelMarkers = travelMarkers;
+                            map.travelLabels = travelLabels;
+
+                            const bounds = new google.maps.LatLngBounds();
+                            bounds.union(route.bounds);
+                            map.fitBounds(bounds);
+
+                            const mapData = {
+                                route: { bounds: route.bounds },
+                                markers: markers.map(m => ({ position: m.position, label: m.label, title: m.title })),
+                                travelMarkers: travelMarkers.map(m => ({ position: m.position, title: m.title })),
+                                travelLabels: travelLabels.map(l => ({ content: l.content }))
+                            };
+                            localStorage.setItem(cacheKey, JSON.stringify(mapData));
+                        } else {
+                            console.error('Directions failed:', status);
+                            mapDiv.innerHTML = `<p class="error">Failed to load route: ${status}</p>`;
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching travel time for Home-1:', error);
+                    mapDiv.innerHTML = `<p class="error">Failed to fetch travel time for Home-1: ${error.message}</p>`;
+                });
+        }
+
+        function renderCachedMap(route, markers, travelMarkers, travelLabels) {
+            const scheduleDiv = document.getElementById('schedule');
+            scheduleDiv.innerHTML = '';
+
+            const daySection = document.createElement('div');
+            daySection.className = 'day-section';
+            const dateObj = new Date(Date.UTC(
+                parseInt(currentDisplayDate.split('-')[0]),
+                parseInt(currentDisplayDate.split('-')[1]) - 1,
+                parseInt(currentDisplayDate.split('-')[2])
+            ));
+            const formattedDate = `${dateObj.getUTCMonth() + 1}/${dateObj.getUTCDate()}/${dateObj.getUTCFullYear()}`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'day-header';
+
+            const buttonsLeft = document.createElement('div');
+            buttonsLeft.className = 'buttons-left';
+            const backButton = document.createElement('button');
+            backButton.className = 'back-button';
+            backButton.textContent = 'Back to Schedule';
+            backButton.addEventListener('click', () => {
+                selectedTechnician = null;
+                renderScheduleForDay(currentDisplayDate);
+            });
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'toggle-button';
+            toggleButton.textContent = showDistance ? 'Hide Distance' : 'Show Distance';
+            toggleButton.addEventListener('click', () => {
+                showDistance = !showDistance;
+                console.log(`Toggled showDistance to ${showDistance}`);
+                toggleButton.textContent = showDistance ? 'Hide Distance' : 'Show Distance';
+                if (map && map.travelMarkers) {
+                    console.log(`Updating ${map.travelMarkers.length} travel markers`);
+                    map.travelMarkers.forEach((marker, index) => {
+                        if (showDistance) {
+                            marker.setMap(map);
+                            map.travelLabels[index].open(map, marker);
+                        } else {
+                            marker.setMap(null);
+                            map.travelLabels[index].close();
+                        }
+                    });
+                }
+            });
+            buttonsLeft.appendChild(backButton);
+            buttonsLeft.appendChild(toggleButton);
+
+            const headerH2 = document.createElement('h2');
+            headerH2.textContent = `${formattedDate} - ${selectedTechnician}`;
+
+            headerDiv.appendChild(buttonsLeft);
+            headerDiv.appendChild(headerH2);
+
+            daySection.appendChild(headerDiv);
+
+            const mapDiv = document.createElement('div');
+            mapDiv.id = 'map';
+            daySection.appendChild(mapDiv);
+            scheduleDiv.appendChild(daySection);
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: { lat: 41.8781, lng: -87.6298 }
+            });
+            directionsRenderer.setMap(map);
+            directionsRenderer.setOptions({ suppressMarkers: true });
+
+            map.markers = markers.map(m => {
+                const marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(m.position.lat, m.position.lng),
+                    map: map,
+                    label: m.label,
+                    title: m.title
+                });
+                return marker;
+            });
+            map.travelMarkers = travelMarkers.map(m => {
+                const roundedTitle = m.title.replace(/(\d+\.\d+) Min/, (match, p1) => `${Math.round(parseFloat(p1))} Min`);
+                const marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(m.position.lat, m.position.lng),
+                    map: showDistance ? map : null,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                        scaledSize: new google.maps.Size(20, 20)
+                    },
+                    title: roundedTitle
+                });
+                return marker;
+            });
+            map.travelLabels = travelLabels.map((l, index) => {
+                const roundedContent = l.content.replace(/(\d+\.\d+) Min/, (match, p1) => `${Math.round(parseFloat(p1))} Min`);
+                const infoWindow = new google.maps.InfoWindow({ content: roundedContent });
+                if (showDistance) infoWindow.open(map, map.travelMarkers[index]);
+                return infoWindow;
+            });
+
+            const techData = scheduleData.find(tech => tech.technician === selectedTechnician);
+            const waypoints = techData.schedule
+                .filter(entry => entry.start_time.split('T')[0] === currentDisplayDate)
+                .map(entry => ({ location: entry.work_order.address, stopover: true }));
+            const homeAddress = techData.home_address || '600 W Jackson Blvd, Chicago, IL 60661';
+            directionsService.route({
+                origin: homeAddress,
+                destination: homeAddress,
+                waypoints: waypoints,
+                travelMode: google.maps.TravelMode.DRIVING,
+                optimizeWaypoints: false
+            }, (result, status) => {
+                if (status === google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(result);
+                    console.log('Re-rendered cached route successfully');
+                    map.fitBounds(new google.maps.LatLngBounds().union(route.bounds));
+                } else {
+                    console.error('Failed to re-render cached route:', status);
+                }
+            });
+        }
+
+        function clearAllCaches() {
+            console.log('Clearing all caches');
+            localStorage.removeItem('scheduleData');
+            localStorage.removeItem('scheduleDataTimestamp');
+            for (let key in localStorage) {
+                if (key.startsWith('mapData_')) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+
+        function showStatusPopup(event, ticketNumber, cell) {
+            const popup = document.getElementById('status-popup');
+            popup.style.display = 'block';
+
+            const rect = cell.getBoundingClientRect();
+            const popupWidth = popup.offsetWidth || 120;
+            const popupHeight = popup.offsetHeight || 150;
+
+            let left = rect.right + 5;
+            let top = rect.top + window.scrollY;
+
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            if (left + popupWidth > viewportWidth) {
+                left = rect.left - popupWidth - 5;
+            }
+
+            if (top + popupHeight > viewportHeight + window.scrollY) {
+                top = (viewportHeight + window.scrollY) - popupHeight - 5;
+            }
+
+            if (top < window.scrollY) {
+                top = window.scrollY + 5;
+            }
+
+            popup.style.left = `${left}px`;
+            popup.style.top = `${top}px`;
+
+            const buttons = popup.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.onclick = async () => {
+                    const newStatus = button.getAttribute('data-status');
+                    try {
+                        const response = await fetch('/api/update-work-order-status/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ticket_number: ticketNumber, status: newStatus })
+                        });
+                        const result = await response.json();
+                        if (result.status === 'success') {
+                            clearAllCaches();
+                            await fetchSchedule(true);
+                            console.log('Schedule re-rendered after status update');
+                            if (selectedTechnician) {
+                                renderMapForTechnician(selectedTechnician);
+                            }
+                        } else {
+                            alert(`Failed to update status: ${result.message}`);
+                        }
+                    } catch (error) {
+                        console.error('Error updating status:', error);
+                    }
+                    popup.style.display = 'none';
+                };
+            });
+
+            document.addEventListener('click', function closePopup(e) {
+                if (!popup.contains(e.target) && !cell.contains(e.target)) {
+                    popup.style.display = 'none';
+                    document.removeEventListener('click', closePopup);
+                }
+            });
+        }
+
+        function updateWeek(offset) {
+            if (!currentWeekStart) {
+                console.error('currentWeekStart is null, initializing schedule');
+                initializeSchedule();
+                return;
+            }
+            const newWeekStart = new Date(currentWeekStart);
+            newWeekStart.setUTCDate(currentWeekStart.getUTCDate() + offset * 7);
+            currentWeekStart = newWeekStart;
+            currentDisplayDate = getFirstDateWithEntriesInWeek(currentWeekStart) || toISODateUTC(currentWeekStart);
+            renderDayButtons();
+            if (selectedTechnician) {
+                renderMapForTechnician(selectedTechnician);
+            } else {
+                renderScheduleForDay(currentDisplayDate);
+            }
+            updateActiveDayButton(0);
+        }
+
+        document.getElementById('prevWeek').addEventListener('click', () => updateWeek(-1));
+        document.getElementById('nextWeek').addEventListener('click', () => updateWeek(1));
+
+        document.getElementById('close-form').addEventListener('click', () => {
+            document.getElementById('add-wo-form').style.display = 'none';
+        });
+
+        document.getElementById('wo-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const activityType = document.getElementById('activity-type').value;
+            const address = document.getElementById('address').value;
+            const availability = document.getElementById('availability').value;
+
+            const newWo = {
+                activity_type: activityType,
+                address: address,
+                customer_availability: availability
+            };
+
+            try {
+                console.log('Creating new work order:', newWo);
+                const createResponse = await fetch('/api/create-work-order/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newWo)
+                });
+                const createResult = await createResponse.json();
+                if (createResult.status !== 'success') {
+                    throw new Error(`Failed to create work order: ${createResult.message}`);
+                }
+                const ticketNumber = createResult.ticket_number;
+                console.log(`Created work order ${ticketNumber}`);
+
+                console.log(`Scheduling work order ${ticketNumber}`);
+                const scheduleResponse = await fetch('/api/schedule-selected/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticket_numbers: [ticketNumber] })
+                });
+                const scheduleResult = await scheduleResponse.json();
+                if (scheduleResult.status === 'success') {
+                    alert(scheduleResult.message);
+                    console.log(`Schedule response headers:`, scheduleResponse.headers);
+                    clearAllCaches();
+                    await fetchSchedule(true);
+                    if (selectedTechnician) {
+                        renderMapForTechnician(selectedTechnician);
+                    } else {
+                        renderScheduleForDay(currentDisplayDate);
+                    }
+                } else {
+                    alert(`Failed to schedule work order: ${scheduleResult.message}`);
+                }
+            } catch (error) {
+                console.error('Error adding/scheduling work order:', error);
+                alert('An error occurred while adding/scheduling the work order.');
+            }
+            document.getElementById('add-wo-form').style.display = 'none';
+        });
+
+        const menuButton = document.getElementById('menu-button');
+        const sidebar = document.getElementById('sidebar');
+        const dispatchToggle = document.getElementById('dispatch-center-toggle');
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const headerTitle = document.getElementById('header-title');
+        const dropdown = document.getElementById('activity-dropdown');
+
+        menuButton.addEventListener('click', () => {
+            sidebar.style.left = sidebar.style.left === '0px' ? '-250px' : '0px';
+        });
+
+        dispatchToggle.addEventListener('click', () => {
+            sidebarMenu.style.display = sidebarMenu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target) && event.target !== menuButton) {
+                sidebar.style.left = '-250px';
+            }
+            if (!dropdown.contains(event.target) && event.target !== headerTitle) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        headerTitle.addEventListener('click', () => {
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+
+        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                selectedActivityType = item.getAttribute('data-activity');
+                console.log(`Selected activity type: ${selectedActivityType}`);
+                dropdown.style.display = 'none';
+                renderScheduleForDay(currentDisplayDate);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // If Google Maps is unavailable (no key), still load schedule data.
+            if (!window.google || !window.google.maps) {
+                fetchTechnicians().then(() => fetchSchedule(true));
+            }
+        });
+    </script>
+</body>
+</html>

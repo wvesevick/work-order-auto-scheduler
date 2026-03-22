@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technicians</title>
+    <!-- Include Poppins font for consistency with work_orders.html -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #2a2a2a;
+            padding: 20px 40px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+            color: #e0e0e0;
+            text-align: center;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .header img {
+            position: absolute;
+            right: 20px;
+            height: 2em;
+            width: auto;
+            border-radius: 15px;
+        }
+
+        #menu-button {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.5em;
+            cursor: pointer;
+            position: absolute;
+            left: 20px;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: #333;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+            transition: left 0.3s ease;
+            z-index: 1001;
+            border-radius: 0 15px 15px 0;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .sidebar h3 {
+            margin: 0 0 20px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin: 10px 0;
+        }
+
+        .sidebar a {
+            color: #00b7ff;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+
+        .arrow {
+            font-size: 0.8em;
+        }
+
+        .action-bar {
+            position: sticky;
+            top: 80px;
+            background-color: #1a1a1a;
+            padding: 10px 0;
+            z-index: 999;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        #add-tech-button {
+            padding: 8px 12px;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            margin-right: 10px;
+        }
+
+        #add-tech-button:hover {
+            background-color: #555;
+        }
+
+        .table-container {
+            position: relative;
+            overflow-x: auto;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            margin-top: 120px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #333;
+            table-layout: auto;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 998;
+            background-color: #333;
+        }
+
+        thead tr {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            box-sizing: border-box;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        th {
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0.5px;
+            padding: 6px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        th:hover {
+            background-color: #555;
+            transform: scale(1.02);
+        }
+
+        td {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+
+        .tech-name {
+            cursor: pointer;
+            color: #00b7ff;
+        }
+
+        .tech-name:hover {
+            color: #0095cc;
+        }
+
+        /* Popup styles (unchanged from original tech.html) */
+        #add-tech-form, #edit-tech-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1002;
+            width: 400px;
+            height: auto;
+        }
+
+        #add-tech-form label, #edit-tech-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e0e0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #add-tech-form input[type="text"], #edit-tech-form input[type="text"],
+        #add-tech-form select, #edit-tech-form select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            border-radius: 5px;
+            border: 1px solid #666;
+            background-color: #444;
+            color: #e0e0e0;
+        }
+
+        #add-home-address, #edit-home-address {
+            border-radius: 50px;
+            padding: 8px 15px;
+        }
+
+        #add-tech-form button, #edit-tech-form button {
+            padding: 8px 12px;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+        }
+
+        #add-tech-form button:hover, #edit-tech-form button:hover {
+            background-color: #555;
+        }
+
+        /* Bubbly button styles for activity type and work days */
+        .bubbly-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .bubbly-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #444;
+            color: #e0e0e0;
+            border: 1px solid #666;
+            border-radius: 20px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .bubbly-button.selected {
+            background-color: #00b7ff;
+            color: #1a1a1a;
+            border: 2px solid #ccc;
+        }
+
+        .bubbly-button:hover:not(.selected) {
+            background-color: #555;
+            border-color: #777;
+        }
+
+        .note {
+            font-size: 0.8em;
+            color: #a0a0a0;
+            margin-bottom: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Google Places Autocomplete styles */
+        .pac-container {
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #666;
+            z-index: 1003 !important;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .pac-item {
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .pac-item:hover {
+            background-color: #444;
+        }
+
+        .pac-item-query {
+            color: #e0e0e0;
+        }
+
+        /* Style for hidden inputs */
+        #add-home-address-hidden, #edit-address-hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button id="menu-button">☰</button>
+        <h1>Technicians</h1>
+        <img src="/static/Admin/img/logo.png" alt="Logo">
+    </div>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-content">
+            <div id="dispatch-center-toggle">
+                <h3>Dispatch Center <span class="arrow">▼</span></h3>
+            </div>
+            <ul id="sidebar-menu" style="display: none;">
+                <li><a href="/schedule/" id="schedule-link">Schedule</a></li>
+                <li><a href="/work-orders/" id="work-orders-link">Work Orders</a></li>
+                <li><a href="/technicians/" id="technicians-link">Technicians</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container">
+        <div class="action-bar">
+            <button id="add-tech-button">Add Tech</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Technician Name</th>
+                        <th>Home Address</th>
+                        <th>Activity Type</th>
+                        <th>Work Days</th>
+                    </tr>
+                </thead>
+                <tbody id="technicians-body">
+                    <!-- Data will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Technician Form -->
+    <div id="add-tech-form">
+        <h3>Add New Technician</h3>
+        <form id="add-tech-form-inner">
+            <label for="add-name">Technician Name:</label>
+            <input type="text" id="add-name" name="name" required>
+            <label for="add-home-address">Home Address:</label>
+            <input type="text" id="add-home-address" name="home-address" placeholder="Start typing an address..." autocomplete="off" required>
+            <input type="hidden" id="add-home-address-hidden" name="home-address-hidden">
+            <div id="add-address-suggestions" style="position: absolute; background: #333; color: #e0e0e0; border: 1px solid #666; z-index: 1003; display: none;"></div>
+            <label>Activity Type:</label>
+            <div class="bubbly-buttons" id="add-activity-type">
+                <div class="bubbly-button" data-value="PM">PM</div>
+                <div class="bubbly-button" data-value="Service">Service</div>
+                <div class="bubbly-button" data-value="Ice">Ice</div>
+                <div class="bubbly-button" data-value="Installation">Installation</div>
+            </div>
+            <input type="hidden" id="add-activity-type-value" name="activity-type">
+            <label>Work Days:</label>
+            <p class="note">Select the days the technician is available to work.</p>
+            <div class="bubbly-buttons" id="add-work-days">
+                <div class="bubbly-button" data-value="Sunday">Sunday</div>
+                <div class="bubbly-button" data-value="Monday">Monday</div>
+                <div class="bubbly-button" data-value="Tuesday">Tuesday</div>
+                <div class="bubbly-button" data-value="Wednesday">Wednesday</div>
+                <div class="bubbly-button" data-value="Thursday">Thursday</div>
+                <div class="bubbly-button" data-value="Friday">Friday</div>
+                <div class="bubbly-button" data-value="Saturday">Saturday</div>
+            </div>
+            <input type="hidden" id="add-work-days-value" name="work-days">
+            <button type="submit">Add Technician</button>
+            <button type="button" id="close-add-form">Close</button>
+        </form>
+    </div>
+
+    <!-- Edit Technician Form -->
+    <div id="edit-tech-form">
+        <h3>Edit Technician</h3>
+        <form id="edit-tech-form-inner">
+            <input type="hidden" id="original-name" name="original-name">
+            <label for="edit-name">Technician Name:</label>
+            <input type="text" id="edit-name" name="new-name">
+            <label for="edit-home-address">Home Address:</label>
+            <input type="text" id="edit-home-address" name="home-address" placeholder="Start typing an address..." autocomplete="off">
+            <input type="hidden" id="edit-address-hidden" name="address">
+            <div id="edit-address-suggestions" style="position: absolute; background: #333; color: #e0e0e0; border: 1px solid #666; z-index: 1003; display: none;"></div>
+            <label>Activity Type:</label>
+            <div class="bubbly-buttons" id="edit-activity-type">
+                <div class="bubbly-button" data-value="PM">PM</div>
+                <div class="bubbly-button" data-value="Service">Service</div>
+                <div class="bubbly-button" data-value="Ice">Ice</div>
+                <div class="bubbly-button" data-value="Installation">Installation</div>
+            </div>
+            <input type="hidden" id="edit-activity-type-value" name="activity-type">
+            <label>Work Days:</label>
+            <p class="note">Select the days the technician is available to work.</p>
+            <div class="bubbly-buttons" id="edit-work-days">
+                <div class="bubbly-button" data-value="Sunday">Sunday</div>
+                <div class="bubbly-button" data-value="Monday">Monday</div>
+                <div class="bubbly-button" data-value="Tuesday">Tuesday</div>
+                <div class="bubbly-button" data-value="Wednesday">Wednesday</div>
+                <div class="bubbly-button" data-value="Thursday">Thursday</div>
+                <div class="bubbly-button" data-value="Friday">Friday</div>
+                <div class="bubbly-button" data-value="Saturday">Saturday</div>
+            </div>
+            <input type="hidden" id="edit-work-days-value" name="work-days">
+            <button type="submit">Save</button>
+            <button type="button" id="close-edit-form">Close</button>
+        </form>
+    </div>
+
+    <script>console.info('Address autocomplete is disabled in secure demo mode.');</script>
+    <script>
+        // Global variables
+        let autocompleteService = null;
+        let placesService = null;
+
+        // Initialize Google Maps API services after DOM is loaded
+        function initMap() {
+            console.log('Google Maps API loaded');
+            try {
+                autocompleteService = new google.maps.places.AutocompleteService();
+                placesService = new google.maps.places.PlacesService(document.createElement('div'));
+            } catch (error) {
+                console.error('Error initializing Google Maps services:', error);
+            }
+            fetchTechnicians(); // Load technicians after initialization
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize address autocomplete for add form
+            const addAddressInput = document.getElementById('add-home-address');
+            const addAddressHidden = document.getElementById('add-home-address-hidden');
+            const addSuggestionsContainer = document.getElementById('add-address-suggestions');
+            if (!addAddressInput || !addAddressHidden || !addSuggestionsContainer) {
+                console.error('Add address input, hidden address input, or suggestions container not found');
+                return;
+            }
+
+            addAddressInput.addEventListener('input', async (event) => {
+                const query = event.target.value;
+                if (!query || query.length < 3) {
+                    addSuggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                if (!autocompleteService) {
+                    console.error('AutocompleteService not initialized');
+                    return;
+                }
+
+                try {
+                    const request = {
+                        input: query,
+                        types: ['address'],
+                        componentRestrictions: { country: 'us' }
+                    };
+                    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+                        if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                            console.error('Error fetching place predictions:', status);
+                            addSuggestionsContainer.style.display = 'none';
+                            return;
+                        }
+
+                        addSuggestionsContainer.innerHTML = '';
+                        predictions.forEach(prediction => {
+                            const suggestionItem = document.createElement('div');
+                            suggestionItem.className = 'pac-item';
+                            suggestionItem.textContent = prediction.description;
+                            suggestionItem.style.padding = '5px';
+                            suggestionItem.style.cursor = 'pointer';
+                            suggestionItem.addEventListener('click', () => {
+                                addAddressInput.value = prediction.description;
+                                addAddressHidden.value = prediction.description;
+                                console.log('Selected add address:', prediction.description);
+                                console.log('Updated add-home-address-hidden value:', addAddressHidden.value);
+                                addSuggestionsContainer.style.display = 'none';
+                            });
+                            addSuggestionsContainer.appendChild(suggestionItem);
+                        });
+                        addSuggestionsContainer.style.display = 'block';
+                    });
+                } catch (error) {
+                    console.error('Error during add address autocomplete:', error);
+                    addSuggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Initialize address autocomplete for edit form
+            const editAddressInput = document.getElementById('edit-home-address');
+            const editAddressHidden = document.getElementById('edit-address-hidden');
+            const editSuggestionsContainer = document.getElementById('edit-address-suggestions');
+            if (!editAddressInput || !editAddressHidden || !editSuggestionsContainer) {
+                console.error('Edit address input, hidden address input, or suggestions container not found');
+                return;
+            }
+
+            editAddressInput.addEventListener('input', async (event) => {
+                const query = event.target.value;
+                if (!query || query.length < 3) {
+                    editSuggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                if (!autocompleteService) {
+                    console.error('AutocompleteService not initialized');
+                    return;
+                }
+
+                try {
+                    const request = {
+                        input: query,
+                        types: ['address'],
+                        componentRestrictions: { country: 'us' }
+                    };
+                    autocompleteService.getPlacePredictions(request, (predictions, status) => {
+                        if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                            console.error('Error fetching place predictions:', status);
+                            editSuggestionsContainer.style.display = 'none';
+                            return;
+                        }
+
+                        editSuggestionsContainer.innerHTML = '';
+                        predictions.forEach(prediction => {
+                            const suggestionItem = document.createElement('div');
+                            suggestionItem.className = 'pac-item';
+                            suggestionItem.textContent = prediction.description;
+                            suggestionItem.style.padding = '5px';
+                            suggestionItem.style.cursor = 'pointer';
+                            suggestionItem.addEventListener('click', () => {
+                                editAddressInput.value = prediction.description;
+                                editAddressHidden.value = prediction.description;
+                                console.log('Selected edit address:', prediction.description);
+                                console.log('Updated edit-address-hidden value:', editAddressHidden.value);
+                                editSuggestionsContainer.style.display = 'none';
+                            });
+                            editSuggestionsContainer.appendChild(suggestionItem);
+                        });
+                        editSuggestionsContainer.style.display = 'block';
+                    });
+                } catch (error) {
+                    console.error('Error during edit address autocomplete:', error);
+                    editSuggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!addAddressInput.contains(event.target) && !addSuggestionsContainer.contains(event.target)) {
+                    addSuggestionsContainer.style.display = 'none';
+                }
+                if (!editAddressInput.contains(event.target) && !editSuggestionsContainer.contains(event.target)) {
+                    editSuggestionsContainer.style.display = 'none';
+                }
+            });
+
+            // Update address inputs on blur as a fallback
+            addAddressInput.addEventListener('blur', () => {
+                addAddressHidden.value = addAddressInput.value;
+                console.log('Updated add-home-address-hidden value (via blur):', addAddressHidden.value);
+            });
+            editAddressInput.addEventListener('blur', () => {
+                editAddressHidden.value = editAddressInput.value;
+                console.log('Updated edit-address-hidden value (via blur):', editAddressHidden.value);
+            });
+        });
+
+        const menuButton = document.getElementById('menu-button');
+        const sidebar = document.getElementById('sidebar');
+        const dispatchToggle = document.getElementById('dispatch-center-toggle');
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const techniciansBody = document.getElementById('technicians-body');
+        const addTechForm = document.getElementById('add-tech-form');
+        const addTechFormInner = document.getElementById('add-tech-form-inner');
+        const addTechButton = document.getElementById('add-tech-button');
+        const closeAddForm = document.getElementById('close-add-form');
+        const addActivityTypeButtons = document.querySelectorAll('#add-activity-type .bubbly-button');
+        const addWorkDaysButtons = document.querySelectorAll('#add-work-days .bubbly-button');
+        const addActivityTypeValue = document.getElementById('add-activity-type-value');
+        const addWorkDaysValue = document.getElementById('add-work-days-value');
+        const editTechForm = document.getElementById('edit-tech-form');
+        const editTechFormInner = document.getElementById('edit-tech-form-inner');
+        const closeEditForm = document.getElementById('close-edit-form');
+        const activityTypeButtons = document.querySelectorAll('#edit-activity-type .bubbly-button');
+        const workDaysButtons = document.querySelectorAll('#edit-work-days .bubbly-button');
+        const activityTypeValue = document.getElementById('edit-activity-type-value');
+        const workDaysValue = document.getElementById('edit-work-days-value');
+
+        // Sidebar functionality
+        menuButton.addEventListener('click', () => {
+            sidebar.style.left = sidebar.style.left === '0px' ? '-250px' : '0px';
+        });
+
+        dispatchToggle.addEventListener('click', () => {
+            sidebarMenu.style.display = sidebarMenu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!sidebar.contains(event.target) && event.target !== menuButton) {
+                sidebar.style.left = '-250px';
+            }
+        });
+
+        // Add technician button
+        addTechButton.addEventListener('click', () => {
+            addTechForm.style.display = 'block';
+            resetAddTechForm();
+        });
+
+        function resetAddTechForm() {
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-home-address').value = '';
+            document.getElementById('add-home-address-hidden').value = '';
+            addActivityTypeButtons.forEach(button => button.classList.remove('selected'));
+            addWorkDaysButtons.forEach(button => button.classList.remove('selected'));
+            addActivityTypeValue.value = '';
+            addWorkDaysValue.value = '';
+            document.getElementById('add-address-suggestions').style.display = 'none';
+        }
+
+        // Handle activity type selection for add form (single select)
+        addActivityTypeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                addActivityTypeButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                addActivityTypeValue.value = button.getAttribute('data-value');
+            });
+        });
+
+        // Handle work days selection for add form (multi-select)
+        addWorkDaysButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                button.classList.toggle('selected');
+                const selectedDays = Array.from(addWorkDaysButtons)
+                    .filter(btn => btn.classList.contains('selected'))
+                    .map(btn => btn.getAttribute('data-value'));
+                addWorkDaysValue.value = selectedDays.join(', ');
+            });
+        });
+
+        // Add technician form submission
+        addTechFormInner.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const name = document.getElementById('add-name').value;
+            const homeAddress = document.getElementById('add-home-address-hidden').value || document.getElementById('add-home-address').value;
+            const activityType = document.getElementById('add-activity-type-value').value;
+            const workDays = document.getElementById('add-work-days-value').value;
+
+            if (!name || !homeAddress || !activityType) {
+                alert('Please fill in all required fields (Name, Home Address, Activity Type).');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/add-technician/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        home_address: homeAddress,
+                        activity_type: activityType,
+                        work_days: workDays
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
+                    throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('Technician added successfully!');
+                    addTechForm.style.display = 'none';
+                    fetchTechnicians(); // Refresh the table
+                } else {
+                    alert(`Failed to add technician: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error adding technician:', error);
+                alert(`An error occurred while adding the technician: ${error.message}`);
+            }
+        });
+
+        closeAddForm.addEventListener('click', () => {
+            addTechForm.style.display = 'none';
+        });
+
+        // Handle activity type selection for edit form (single select)
+        activityTypeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                activityTypeButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                activityTypeValue.value = button.getAttribute('data-value');
+            });
+        });
+
+        // Handle work days selection for edit form (multi-select)
+        workDaysButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                button.classList.toggle('selected');
+                const selectedDays = Array.from(workDaysButtons)
+                    .filter(btn => btn.classList.contains('selected'))
+                    .map(btn => btn.getAttribute('data-value'));
+                workDaysValue.value = selectedDays.join(', ');
+            });
+        });
+
+        // Fetch technicians data
+        async function fetchTechnicians() {
+            try {
+                const response = await fetch('/api/technicians/', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    mode: 'same-origin',
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const technicians = await response.json();
+                console.log('Fetched technicians:', technicians);
+                renderTechnicians(technicians);
+            } catch (error) {
+                console.error('Error fetching technicians:', error);
+                techniciansBody.innerHTML = `<tr><td colspan="4" class="error">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function renderTechnicians(technicians) {
+            techniciansBody.innerHTML = '';
+            technicians.forEach(tech => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="tech-name">${tech.name}</td>
+                    <td>${tech.home_address}</td>
+                    <td>${tech.activity_type}</td>
+                    <td>${tech.work_days}</td>
+                `;
+                const techNameCell = row.querySelector('.tech-name');
+                techNameCell.addEventListener('click', () => showEditForm(tech));
+                techniciansBody.appendChild(row);
+            });
+        }
+
+        function showEditForm(tech) {
+            document.getElementById('original-name').value = tech.name;
+            document.getElementById('edit-name').value = tech.name;
+            document.getElementById('edit-home-address').value = tech.home_address;
+            document.getElementById('edit-address-hidden').value = tech.home_address;
+
+            // Set activity type
+            activityTypeButtons.forEach(button => {
+                button.classList.toggle('selected', button.getAttribute('data-value') === tech.activity_type);
+            });
+            activityTypeValue.value = tech.activity_type;
+
+            // Set work days
+            const workDays = tech.work_days ? tech.work_days.split(',').map(day => day.trim()) : [];
+            workDaysButtons.forEach(button => {
+                button.classList.toggle('selected', workDays.includes(button.getAttribute('data-value')));
+            });
+            workDaysValue.value = tech.work_days;
+
+            editTechForm.style.display = 'block';
+        }
+
+        closeEditForm.addEventListener('click', () => {
+            editTechForm.style.display = 'none';
+        });
+
+        editTechFormInner.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const originalName = document.getElementById('original-name').value;
+            const newName = document.getElementById('edit-name').value;
+            const homeAddress = document.getElementById('edit-address-hidden').value || document.getElementById('edit-home-address').value;
+            const activityType = document.getElementById('edit-activity-type-value').value;
+            const workDays = document.getElementById('edit-work-days-value').value;
+
+            try {
+                const response = await fetch('/api/update-technician/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        name: originalName,
+                        new_name: newName,
+                        home_address: homeAddress,
+                        activity_type: activityType,
+                        work_days: workDays
+                    }),
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
+                    throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    alert('Technician updated successfully!');
+                    editTechForm.style.display = 'none';
+                    fetchTechnicians();
+                } else {
+                    alert(`Failed to update technician: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error updating technician:', error);
+                alert(`An error occurred while updating the technician: ${error.message}`);
+            }
+        });
+
+        // Function to get CSRF token from cookies
+        function getCsrfToken() {
+            const name = 'csrftoken';
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.trim().split('=');
+                if (key === name) {
+                    return value;
+                }
+            }
+            return null;
+        }
+
+        // Load technicians on page load
+        fetchTechnicians();
+    </script>
+</body>
+</html>

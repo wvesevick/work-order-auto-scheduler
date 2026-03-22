@@ -1,0 +1,170 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+<style>
+    body {
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+    }
+    h1, h2 {
+        color: #333;
+    }
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    li {
+        background-color: #fff;
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button {
+        padding: 10px 15px;
+        margin: 5px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    #visualization {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .vis-group {
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+</style>
+
+{% block content %}
+<h2>Assignment Details</h2>
+<ul>
+    {% for item in items %}
+        <li>Assigned {{ item.content }} to Tech {{ item.tech_name }} on {{ item.start|date:"Y-m-d" }} at {{ item.start|time:"H:i:s" }} (Start Time: {{ item.start|time:"H:i:s" }})</li>
+    {% empty %}
+        <li>No assignments available.</li>
+    {% endfor %}
+</ul>
+<h1>Technician Schedules</h1>
+
+<button id="prevWeek">Previous Week</button>
+<button id="nextWeek">Next Week</button>
+<div id="visualization"></div>
+
+<!-- Safely pass JSON data to JavaScript -->
+<script id="items-data" type="application/json">{{ items_json|safe }}</script>
+<script id="groups-data" type="application/json">{{ groups_json|safe }}</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+<script>
+    // Get the container for the timeline
+    var container = document.getElementById('visualization');
+
+    // Load and parse the JSON data
+    var itemsData = JSON.parse(document.getElementById('items-data').textContent);
+    var groupsData = JSON.parse(document.getElementById('groups-data').textContent);
+    console.log("Items data:", itemsData);
+    console.log("Groups data:", groupsData);
+
+    var items = new vis.DataSet(itemsData);
+    var groups = new vis.DataSet(groupsData);
+
+    // Options for the timeline
+    var options = {
+        width: '100%',
+        height: '400px',
+        margin: { item: 20 },
+        zoomable: true,
+        selectable: true,
+        zoomMin: 1000 * 60 * 60
+    };
+
+    // Create the timeline
+    var timeline = new vis.Timeline(container, items, groups, options);
+
+    // Add click event listener for work order details or zoom
+    timeline.on('click', function (properties) {
+        if (properties.what === 'background') {
+            var clickedTime = properties.time;
+            var startOfDay = new Date(clickedTime);
+            startOfDay.setHours(0, 0, 0, 0);
+            var endOfDay = new Date(startOfDay);
+            endOfDay.setDate(endOfDay.getDate() + 1);
+            timeline.setWindow(startOfDay, endOfDay);
+        } else if (properties.item) {
+            var item = items.get(properties.item);
+            if (item) {
+                var startTime = new Date(item.start);
+                var formattedTime = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                alert('Work Order: ' + item.wo_number + '\nAddress: ' + item.address + '\nStart Time: ' + formattedTime);
+            }
+        }
+    });
+
+    // Function to set the timeline to a specific week
+    function setWeek(startDateStr) {
+        try {
+            var start = new Date(startDateStr);
+            if (isNaN(start.getTime())) {
+                console.error("Invalid start date:", startDateStr);
+                return;
+            }
+            var end = new Date(start);
+            end.setDate(end.getDate() + 7);
+            timeline.setWindow(start, end);
+        } catch (error) {
+            console.error("Error in setWeek:", error);
+        }
+    }
+
+    // Set initial week to current week start (Sunday)
+    var initialStart = new Date();
+    initialStart.setHours(0, 0, 0, 0);
+    initialStart.setDate(initialStart.getDate() - initialStart.getDay());
+    if (itemsData.length > 0) {
+        setWeek(initialStart.toISOString());
+    } else {
+        console.log("No items to display, skipping setWeek.");
+    }
+
+    // Previous Week button
+    document.getElementById('prevWeek').addEventListener('click', function() {
+        try {
+            var currentStart = new Date(timeline.getWindow().start);
+            if (isNaN(currentStart.getTime())) {
+                console.error("Invalid current start date");
+                return;
+            }
+            currentStart.setDate(currentStart.getDate() - 7);
+            setWeek(currentStart.toISOString());
+        } catch (error) {
+            console.error("Error in prevWeek:", error);
+        }
+    });
+
+    // Next Week button
+    document.getElementById('nextWeek').addEventListener('click', function() {
+        try {
+            var currentStart = new Date(timeline.getWindow().start);
+            if (isNaN(currentStart.getTime())) {
+                console.error("Invalid current start date");
+                return;
+            }
+            currentStart.setDate(currentStart.getDate() + 7);
+            setWeek(currentStart.toISOString());
+        } catch (error) {
+            console.error("Error in nextWeek:", error);
+        }
+    });
+</script>
+{% endblock %}

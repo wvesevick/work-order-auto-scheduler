@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local env files
+.env
+
+# Django
+db.sqlite3
+collected_static/
+media/
+scheduling/travel_times.json
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
