@@ -1,138 +1,108 @@
-# Ice Machine Scheduler
+# Work Order Auto Scheduler
 
-Web-based dispatch and routing tool for technician scheduling.
+Dispatch-focused scheduling software that assigns service work orders to technicians while balancing fairness and travel efficiency.
 
-This project lets you:
-- create and manage work orders
-- manage technicians and activity types
-- route submitted work orders into technician schedules
-- visualize schedules in time slots
-- approve/revert statuses (`submitted`, `pending`, `scheduled`, `complete`)
-- use Google Maps travel times (optional, via API key)
+## Project Summary
 
-## Tech Stack
+This project showcases full-stack product execution for field operations:
+- Designed and built a constraint-aware scheduler that balances technician workload by day/week while minimizing travel.
+- Implemented real dispatch constraints including locked jobs, activity-type matching, and customer time-slot windows.
+- Delivered a complete workflow across data model, APIs, UI, demo data seeding, and cost-aware routing integration.
 
-- Python 3.11+ (tested with Python 3.13)
+## What It Does
+
+- Manages work orders with statuses: `submitted`, `pending`, `scheduled`, `complete`
+- Supports single-work-order routing and batch scheduling
+- Presents a weekly planning board with 4 fixed slots per day
+- Shows per-technician map routes with segment times
+- Supports technician specialization by activity type
+- Handles out-of-office slots and blocked availability
+
+## Scheduling Approach
+
+The routing logic scores candidate placements using:
+- fairness targets by technician per day and per week
+- activity-type compatibility
+- customer time-window fit
+- lock preservation for already-placed jobs
+- travel-time minimization with API-aware fallback behavior
+
+## Security and API Cost Controls
+
+- Secrets are read from `.env` only and excluded from git.
+- No browser-exposed API key is required to run the demo UI.
+- Paid travel-time calls run server-side only.
+- Daily paid-call usage can be capped with `GOOGLE_MAPS_DAILY_CALL_LIMIT`.
+- Local demo works without paid API access (fallback behavior included).
+
+## Stack
+
+- Python 3.11+
 - Django 5.x
 - Django REST Framework
-- Vanilla HTML/CSS/JavaScript frontend templates
+- Vanilla JavaScript + Django templates
+- Leaflet + OpenStreetMap for mapping
 
-## Project Structure
-
-- `core/`: business models (customer, lease, machine, work order)
-- `scheduling/`: scheduler logic, APIs, templates, and scheduling models
-- `ice_machine_system/`: Django settings and URL config
-- `manage.py`: Django entry point
-
-## Quick Start (Local)
-
-### 1. Clone and enter project
+## Quick Start
 
 ```bash
-git clone <your-repo-url>
-cd ice_machine_project
-```
-
-### 2. Create and activate a virtual environment
-
-```bash
+git clone https://github.com/wvesevick/work-order-auto-scheduler.git
+cd work-order-auto-scheduler
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
-
-### 4. Configure environment
-
-```bash
 cp .env.example .env
-```
-
-Minimal `.env` values:
-- `DJANGO_SECRET_KEY` (set to any non-empty value for local dev)
-- Optional Google keys:
-  - `GOOGLE_MAPS_API_KEY` (backend travel-time lookups)
-  - `GOOGLE_MAPS_DAILY_CALL_LIMIT` (default `0`, blocks paid API calls)
-  - `GOOGLE_MAPS_DEFAULT_TRAVEL_MINUTES` (fallback travel time when key/limit is unavailable)
-
-If Google keys are missing, the app still runs; travel-time lookups fall back to defaults so users can still test scheduling behavior.
-The schedule map uses OpenStreetMap in secure demo mode, so no browser API key is exposed.
-When a backend Google key is present, route overlays and leg durations are fetched server-side (key remains hidden) and rendered on top of the map.
-For public resume demos, keep `GOOGLE_MAPS_DAILY_CALL_LIMIT=0` to prevent accidental charges.
-
-### 5. Run migrations
-
-```bash
 python manage.py migrate
-```
-
-### 6. Load demo data (recommended)
-
-```bash
 python manage.py seed_demo_data --reset
-```
-
-This seeds a ready-to-demo dataset:
-- 50 total work orders
-- 25 `scheduled` (already placed on technician schedules)
-- 25 `submitted` (unscheduled, ready to route)
-
-### 7. Start the server
-
-```bash
 python manage.py runserver
 ```
 
-Open:
+Open in browser:
 - Scheduler: `http://127.0.0.1:8000/schedule/`
 - Work Orders: `http://127.0.0.1:8000/work-orders/`
 - Technicians: `http://127.0.0.1:8000/technicians/`
-- Admin: `http://127.0.0.1:8000/admin/`
 
-## Optional: Create Admin User
+Demo seed includes:
+- 50 total work orders
+- 25 pre-scheduled
+- 25 unscheduled/submitted
 
-```bash
-python manage.py createsuperuser
-```
+## Environment Variables
 
-## Database
+Required for local startup:
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG=true`
+- `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`
 
-Default is SQLite (`db.sqlite3`) for easy local setup.
+Optional routing controls:
+- `GOOGLE_MAPS_API_KEY=`
+- `GOOGLE_MAPS_DAILY_CALL_LIMIT=0`
+- `GOOGLE_MAPS_DEFAULT_TRAVEL_MINUTES=15`
 
-To use PostgreSQL, set these in `.env`:
-- `DB_ENGINE=postgres`
-- `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
+## Repository Structure
 
-## Notes for GitHub/Collaboration
+- `core/` core models and migrations
+- `scheduling/` scheduling models, API views, routing utilities, templates
+- `ice_machine_system/` Django project settings and URL wiring
+- `scheduling/management/commands/seed_demo_data.py` deterministic demo dataset loader
 
-- Do **not** commit `.env`.
-- `scheduling/travel_times.json` is a runtime cache and is gitignored.
-- Virtualenvs and generated static files are intentionally excluded.
-- API keys are optional and loaded from `.env` only.
-- External travel-time API calls are capped by `GOOGLE_MAPS_DAILY_CALL_LIMIT`; when the cap is reached, fallback travel times are used.
+## Reviewer Path (2 Minutes)
+
+1. Run quick start.
+2. Open Scheduler and inspect a technician route/day.
+3. Open Work Orders and test status updates/routing actions.
+4. Review `scheduling/utils.py` and `scheduling/views.py` for routing behavior.
 
 ## Common Commands
 
 ```bash
 python manage.py check
-python manage.py makemigrations
 python manage.py migrate
 python manage.py seed_demo_data --reset
+python manage.py test
 python manage.py runserver
 ```
 
-## Troubleshooting
+## License
 
-### No routes generated
-- Make sure technicians and work orders have matching `activity_type` values.
-- Ensure work orders are in `submitted` status before routing.
-
-### Map features not working
-- Add valid Google Maps keys to `.env`.
-
-### Import/Module errors
-- Confirm virtualenv is active and dependencies were installed from `requirements.txt`.
+MIT (see `LICENSE`).

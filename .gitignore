@@ -4,6 +4,8 @@ __pycache__/
 *.pyo
 *.pyd
 *.so
+.pytest_cache/
+.mypy_cache/
 
 # Virtual environments
 .venv/
@@ -15,6 +17,7 @@ env/
 
 # Django
 db.sqlite3
+db.sqlite3.*
 collected_static/
 media/
 scheduling/travel_times.json

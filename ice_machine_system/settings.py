@@ -43,6 +43,9 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+if not DEBUG and SECRET_KEY == "dev-only-change-me":
+    raise RuntimeError("Set DJANGO_SECRET_KEY in production.")
+
 # Optional Google Maps keys
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
 # Default is 0 so public demos cannot consume paid API calls unless explicitly enabled.
@@ -156,6 +159,16 @@ STATIC_ROOT = BASE_DIR / "collected_static"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Security defaults for production-like environments.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_SSL_REDIRECT = (not DEBUG) and os.getenv("DJANGO_SECURE_SSL_REDIRECT", "true").lower() == "true"
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 LOGGING = {
