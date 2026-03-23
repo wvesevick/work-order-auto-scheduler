@@ -2,13 +2,6 @@
 
 Dispatch-focused scheduling software that assigns service work orders to technicians while balancing fairness and travel efficiency.
 
-## Project Summary
-
-This project showcases full-stack product execution for field operations:
-- Designed and built a constraint-aware scheduler that balances technician workload by day/week while minimizing travel.
-- Implemented real dispatch constraints including locked jobs, activity-type matching, and customer time-slot windows.
-- Delivered a complete workflow across data model, APIs, UI, demo data seeding, and cost-aware routing integration.
-
 ## What It Does
 
 - Manages work orders with statuses: `submitted`, `pending`, `scheduled`, `complete`
